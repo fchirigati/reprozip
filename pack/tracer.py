@@ -1,0 +1,140 @@
+from utils import get_ms_since_epoch
+from store_data import Provenance
+import subprocess
+import time
+import sys
+import os
+
+class Tracer:
+    """
+    The class Tracer represents a tracer to get process information and store
+    it in a MongoDB.
+    """
+    
+    def __init__(self, log_basedir, pass_lite):
+        """
+        Init method for Tracer.
+        
+        -> log_basedir is the path to the log files
+        -> pass_lite is the script executed by SystemTap / DTrace to get process
+           information
+        -> integrator is the complete path to the python script that stores all
+           the information in a MongoDB
+        """
+        
+        self.__log_basedir = log_basedir
+        self.__pass_lite = pass_lite
+        self.__session_name = None
+        self.__session_name_path = None
+        self.__provenance = Provenance()
+        
+        self.__p_tracer = None
+        
+        assert os.path.isdir(self.__log_basedir)
+        assert os.path.isfile(self.__pass_lite)
+        
+        self.__session_name = '%s-%d' % (os.getenv('USER'), get_ms_since_epoch())
+        self.__session_name_path = os.path.join(self.__log_basedir,
+                                                self.__session_name)
+        assert not os.path.isdir(self.__session_name_path)
+        os.mkdir(self.__session_name_path)
+        
+        # rename the existing current-session/ symlink and add a new link to SESSION_NAME
+        cs = os.path.join(self.__log_basedir, 'current-session')
+        if os.path.exists(cs):
+            os.rename(cs, os.path.join(self.__log_basedir, 'previous-session'))
+        os.symlink(self.__session_name, cs)
+        
+        
+    def store_process_data(self):
+        """
+        Method that stores data in MongoDB.
+        """
+        self.__provenance.store(self.__session_name_path,
+                                self.__session_name)
+
+        
+    def run_tracer(self):
+        """
+        Method that executes the tracer.
+        """
+        
+        command_line = ''
+        
+        if sys.platform.startswith('linux'):
+#            command_line = 'killall stap'
+            command_line = 'sudo killall stap'
+            
+            try:
+                p = subprocess.Popen(command_line.split(),
+                                     stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE)
+            except:
+                print '<error> Could not kill previous processes.'
+                print '        %s' %(sys.exc_info()[1])
+                sys.exit(1)
+            
+            (stdout, stderr) = p.communicate()
+             
+#            command_line = 'stap -o %s/pass-lite.out -S 10 %s' % (self.__session_name_path,
+#                                                                  self.__pass_lite)
+            command_line = 'sudo stap -o %s/pass-lite.out %s' % (self.__session_name_path,
+                                                                       self.__pass_lite)
+            
+            try:
+                self.__p_tracer = subprocess.Popen(command_line.split(),
+                                                   stdout=subprocess.PIPE,
+                                                   stderr=subprocess.PIPE)
+                print 'Tracer pid:', self.__p_tracer.pid
+            except:
+                print '<error> Could not run stap.'
+                print '        %s' %(sys.exc_info()[1])
+                sys.exit(1)
+                
+        else:
+#            command_line = 'killall dtrace'
+            command_line = 'sudo killall dtrace'
+            
+            try:
+                p = subprocess.Popen(command_line.split(),
+                                     stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE)
+            except:
+                print '<error> Could not kill previous processes.'
+                print '        %s' %(sys.exc_info()[1])
+                sys.exit(1)
+            
+            (stdout, stderr) = p.communicate()
+             
+#            command_line = 'dtrace -b 10m -o %s/pass-lite.out.0 -s %s' % (self.__session_name_path,
+#                                                                          self.__pass_lite)
+            command_line = 'sudo dtrace -b 10m -o %s/pass-lite.out.0 -s %s' % (self.__session_name_path,
+                                                                               self.__pass_lite)
+            
+            try:
+                self.__p_tracer = subprocess.Popen(command_line.split(),
+                                                   stdout=subprocess.PIPE,
+                                                   stderr=subprocess.PIPE)
+                print 'Tracer pid:', self.__p_tracer.pid
+            except:
+                print '<error> Could not run dtrace.'
+                print '        %s' %(sys.exc_info()[1])
+                sys.exit(1)
+        
+        # give it some time to begin
+        time.sleep(10)
+                
+    def stop_tracer(self):
+        """
+        Method that stops the tracer.
+        """
+        
+        # give it some time to finalize
+        time.sleep(5)
+        
+        if (self.__p_tracer == None):
+            print '<error> Could not stop tracer.'
+            print '        Tracer process not found.'
+        else:
+#            os.system('kill %d' %self.__p_tracer.pid)
+            os.system('sudo kill %d' %self.__p_tracer.pid)

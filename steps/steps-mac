@@ -1,0 +1,30 @@
+- Create log directory
+  . mkdir /var/log/burrito
+  . sudo chown <user> /var/log/burrito
+
+
+- Install MongoDB
+  . go to the website and install it:
+    http://www.mongodb.org/downloads
+  . move bin files to /usr/local/bin
+    . alternatively, you can put add the bin path to PATH
+  
+  . create the database directory
+    . mkdir /var/log/MongoDB
+
+  . go to System Preferences -> Accounts -> your account -> Login Items
+  . add a script with the following command:
+    #!/bin/bash
+    mongod --fork --quiet --dbpath /var/log/burrito/MongoDB --logpath /var/log/burrito/MongoDB/mongodb.log --logappend
+  . log out and log in
+
+
+- Install PyMongo
+  . go to the website and install it:
+    http://pypi.python.org/pypi/pymongo/#downloads
+  . you can also use easy_install:
+    easy_install pymongo
+
+
+- Install argparse (for python)
+  . easy_install argparse

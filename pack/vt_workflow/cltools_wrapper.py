@@ -1,0 +1,110 @@
+import json
+import sys
+import os
+
+class Wrapper:
+    """
+    Wrapper represents a CLTools wrapper for a VisTrails workflow.
+    """
+    
+    def __init__(self):
+        """
+        Init method for Wrapper.
+        """
+        
+        self.__wrapper = {'args': []}
+        
+    def add_arg(self, type, name, _class, flag, prefix, required, suffix):
+        """
+        Method that adds an argument.
+        """
+        
+        optional_dict = {}
+        if required:
+            optional_dict['required'] = ''
+        if flag:
+            optional_dict['flag'] = flag
+        if prefix:
+            optional_dict['prefix'] = prefix
+        if suffix:
+            optional_dict['suffix'] = suffix
+        
+        self.__wrapper['args'].append([type, name, _class, optional_dict])
+        
+    def set_env(self, name, value):
+        """
+        Method that sets an environment variable for the execution of the main
+        command.
+        """
+        
+        if not self.__wrapper.has_key('options'):
+            self.__wrapper['options'] = {'env': '%s=%s' % (name, value)}
+        else:
+            self.__wrapper['options']['env'] += ';%s=%s' % (name, value)
+        
+    def add_stdout(self, name, _class, required):
+        """
+        Method that adds an output port for stdout.
+        """
+        
+        optional_dict = {}
+        if required:
+            optional_dict['required'] = ''
+        
+        self.__wrapper['stdout'] = [name, _class, optional_dict]
+        
+    def add_stderr(self, name, _class, required):
+        """
+        Method that adds an output port for stderr.
+        """
+        
+        optional_dict = {}
+        if required:
+            optional_dict['required'] = ''
+        
+        self.__wrapper['stderr'] = [name, _class, optional_dict]
+        
+    def set_command(self, command):
+        """
+        Method that sets the main command of the wrapper.
+        """
+        
+        self.__wrapper['command'] = command
+        
+    def set_working_dir(self, dir):
+        """
+        Method that sets the working directory.
+        """
+        
+        self.__wrapper['dir'] = dir
+        
+    def get_str(self):
+        """
+        Method that returns the string representation of the wrapper.
+        """
+        
+        return json.dumps(self.__wrapper)
+        
+    def save_wrapper(self, name):
+        """
+        Method that saves the wrapper in the CLTools directory.
+        """
+        
+        cltools_dir = os.path.join(os.environ['HOME'],'.vistrails/CLTools')
+        if not os.path.exists(cltools_dir):
+            try:
+                os.mkdir(cltools_dir)
+            except:
+                print '<error> Could not create CLTools folder.'
+                print '        %s' %(sys.exc_info()[0])
+                sys.exit(1)
+        
+        wrapper = os.path.join(cltools_dir, name + '.clt')
+        try:
+            f = open(wrapper, 'w')
+            f.write(json.dumps(self.__wrapper))
+            f.close()
+        except:
+            print '<error> Could not create CLTools wrapper.'
+            print '        %s' %(sys.exc_info()[0])
+            sys.exit(1)
