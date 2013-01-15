@@ -834,6 +834,7 @@ class Experiment:
         wrapper.set_command(command)
         
         # setting environment variables
+        env_var = {}
 
         ld_library_path = ''
         
@@ -889,6 +890,7 @@ class Experiment:
             
         if ld_library_path != '':
             wrapper.set_env('LD_LIBRARY_PATH', ld_library_path)
+            env_var['LD_LIBRARY_PATH'] = ld_library_path
             #wrapper.set_env('LD_LIBRARY_PATH', ld_library_path + utils.ld_library_path)
         
             
@@ -938,13 +940,17 @@ class Experiment:
             
             if pythonpath != '':
                 wrapper.set_env('PYTHONPATH', pythonpath)
+                env_var['PYTHONPATH'] = pythonpath
                 #wrapper.set_env('PYTHONPATH', pythonpath + utils.pythonpath)
             
                 
         # HOME environment variable
         home_dir = os.path.join(self.__rep_dir, os.getenv('HOME')[1:])
+        homepath = None
         if os.path.exists(home_dir):
-            wrapper.set_env('HOME', os.path.join(self.__user_dir, os.getenv('HOME')[1:]))
+            homepath = os.path.join(self.__user_dir, os.getenv('HOME')[1:])
+            wrapper.set_env('HOME', homepath)
+            env_var['HOME'] = homepath
             
             
         # taking care of other environment variables
@@ -1017,10 +1023,12 @@ class Experiment:
             
             env_values = ':'.join(values)
             if env_values != '':
-                wrapper.set_env(var, "'%s'" %env_values)
+                wrapper.set_env(var, "'%s'" %env_values.strip("'"))
+                env_var[var] = "'%s'" %env_values.strip("'")
             
         # pwd
-        wrapper.set_working_dir(os.path.join(self.__user_dir, self.__prov_tree.root.execve_pwd[1:]))
+        pwd = os.path.join(self.__user_dir, self.__prov_tree.root.execve_pwd[1:])
+        wrapper.set_working_dir(pwd)
         
         # stderr
         wrapper.add_stderr(name     = 'stderr',
@@ -1049,6 +1057,34 @@ class Experiment:
             f.close()
         except:
             print '<error> Could not create CLTools wrapper.'
+            print '        %s' % sys.exc_info()[1]
+            sys.exit(1)
+            
+        # executable script
+        # in case the user does not want to use the workflow
+        script = ''
+        
+        script += 'pushd %s\n' %pwd
+        for var in env_var:
+            script += '%s=%s ' %(var, env_var[var])
+            
+        for i in range(0, len(argv_dict), 1):
+            if argv_dict[i]['flag']:
+                script += '%s ' %argv_dict[i]['flag']
+            if argv_dict[i]['prefix']:
+                script += '%s' %argv_dict[i]['prefix']
+            script += '%s ' %argv_dict[i]['value']
+            
+        script += '\npopd'
+            
+        script_file = utils.exec_path.replace(utils.rep_dir_var,
+                                              self.__rep_dir)
+        try:
+            f = open(script_file, 'w')
+            f.write(script)
+            f.close()
+        except:
+            print '<error> Could not create executable script.'
             print '        %s' % sys.exc_info()[1]
             sys.exit(1)
         

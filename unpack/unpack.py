@@ -5,6 +5,7 @@ import sys
 import os
 import utils
 import pickle
+import stat
 
 if __name__ == '__main__':
     
@@ -89,8 +90,10 @@ if __name__ == '__main__':
         print '<error> Could not unpack the experiment'
         print '        %s' % sys.exc_info()[1]
         sys.exit(1)
+        
+    home = os.getenv('HOME')
     
-    # replacing the directory inside the workflow and the wrappers
+    # replacing the directory inside the workflow, wrappers and executable
     vt_dir = os.path.join(exp_dir, os.path.basename(utils.vistrails_dir))
     vt_files = os.listdir(vt_dir)
     vt_files.remove(os.path.basename(utils.cltools_dir))
@@ -98,7 +101,24 @@ if __name__ == '__main__':
     wrapper_dir = os.path.join(vt_dir, os.path.basename(utils.cltools_dir))
     wrappers = os.listdir(wrapper_dir)
     
-    home = os.getenv('HOME')
+    script_file = os.path.join(exp_dir, os.path.basename(utils.exec_path))
+    f = open(script_file, 'r')
+    contents = f.read()
+    f.close()
+    
+    # replacing user directory
+    contents = contents.replace(utils.user_dir_var,
+                                os.path.normpath(wdir))
+    
+    f = open(script_file, 'w')
+    f.write(contents)
+    f.close()
+    
+    # making the script executable
+    os.chmod(script_file, stat.S_IXUSR | stat.S_IXOTH |
+             stat.S_IXGRP | stat.S_IRUSR | stat.S_IROTH |
+             stat.S_IRGRP | stat.S_IWUSR | stat.S_IWOTH |
+             stat.S_IWGRP)
     
     for file in vt_files:
         file_path = os.path.join(vt_dir, file)

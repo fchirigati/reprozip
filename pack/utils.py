@@ -15,6 +15,7 @@ vistrails_dir = os.path.join(rep_dir_var, 'vistrails')
 cltools_dir = os.path.join(rep_dir_var, 'vistrails', 'cltools')
 cp_dir = os.path.join(rep_dir_var, 'rz_cp')
 
+exec_path = os.path.join(rep_dir_var, 'rep.exec')
 config_path = os.path.join(os.getcwd(), 'rep.config')
 objs_path = os.path.join(os.getcwd(), '.rep.objs')
 symlink_path = os.path.join(rep_dir_var, '.symlinks')
