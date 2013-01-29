@@ -560,13 +560,13 @@ class Experiment:
                                 self.__targets.pop(target)
                             continue
                         
-                        if (element[1].lower() != 'y') and (element[1].lower() != 'n'):
+                        if (element[2].lower() != 'y') and (element[2].lower() != 'n'):
                             print '<error> Bad configuration file'
-                            print '        value "%s" unrecognized' % element[1]
+                            print '        value "%s" unrecognized' % element[2]
                             sys.exit(1)
                             
                         include = True
-                        if element[1].lower() == 'n':
+                        if element[2].lower() == 'n':
                             include = False
                             
                         if not file_dict.has_key(element[0]):
@@ -578,7 +578,7 @@ class Experiment:
                                         if self.__symlink_to_target[symlink] == element[0]:
                                             self.__symlink_to_target.pop(symlink)
                                 else:
-                                    self.__targets[element[0]] = element[2]
+                                    self.__targets[element[0]] = element[3]
                                 continue
                             print '<error> Bad configuration file'
                             print '        file "%s" not found' % element[0]
@@ -591,7 +591,7 @@ class Experiment:
                                 self.__symlink_to_target.pop(element[0])
                                 self.__targets.pop(target)
                         else:
-                            file_dict[element[0]] = element[2]
+                            file_dict[element[0]] = element[3]
                                 
         ########################################################################
         
@@ -1473,26 +1473,28 @@ class Experiment:
         Method to generate a configuration file of the packing process.
         """
         
-        config_file = '# Platform: %s\n# Machine Type: %s\n' % (platform.platform(aliased=True),
-                                                                platform.machine())
+        config_file = '# Platform: %s\n' % platform.platform(aliased=True)
         config_file += '# Processor: %s\n' % platform.processor()
         
         try:
             config_file += '# Number of CPUs: %s\n' % os.sysconf('SC_NPROCESSORS_ONLN')
-            config_file += '# Size of word: %s bits\n' % os.sysconf('SC_WORD_BIT')
+            #config_file += '# Size of word: %s bits\n' % os.sysconf('SC_WORD_BIT')
         except:
             pass
         
-        config_file += '\n'
+        config_file += '\n\n'
         
         # original file
-        first_column = ['*Original file*', '']
+        first_column = ['* Original File *', '']
+        
+        # size of original file
+        second_column = ['* Size (KB) *', '']
         
         # include or not
-        second_column = ['*Include?*', '']
+        third_column = ['* Include? *', '']
         
         # file in the reproducible folder
-        third_column = ['*Package file*', '']
+        fourth_column = ['* Package File *', '']
         
         ########################################################################
         
@@ -1502,74 +1504,96 @@ class Experiment:
             'title'         -> class of file (main program, ...)
             'file_dict'     -> dictionary with files
             
-            Returns lists for first, second and third columns of
+            Returns lists for first, second, third and fourth columns of
             configuration file.
             """
             first_column = []
             second_column = []
             third_column = []
+            fourth_column = []
             
             first_column.append('[%s]' %title)
             second_column.append('')
             third_column.append('')
+            fourth_column.append('')
             
             for file_ in file_dict:
+                size = ''
+                try:
+                    size = '%0.2f' %(os.path.getsize(file_)/1024.0)
+                except:
+                    size = 'N/A'
+                
                 first_column.append(file_)
-                second_column.append('Y')
-                third_column.append(file_dict[file_])
+                second_column.append(size)
+                third_column.append('Y')
+                fourth_column.append(file_dict[file_])
                 
                 if self.__symlink_to_target.has_key(file_):
+                    size = ''
+                    try:
+                        size = '%0.2f' %(os.path.getsize(self.__symlink_to_target[file_])/1024.0)
+                    except:
+                        size = 'N/A'
+                        
                     first_column.append(self.__symlink_to_target[file_])
-                    second_column.append('Y')
-                    third_column.append(self.__targets[self.__symlink_to_target[file_]])
+                    second_column.append(size)
+                    third_column.append('Y')
+                    fourth_column.append(self.__targets[self.__symlink_to_target[file_]])
                 
             first_column.append('')
             second_column.append('')
             third_column.append('')
+            fourth_column.append('')
             
-            return (first_column, second_column, third_column)
+            return (first_column, second_column, third_column, fourth_column)
         
         ########################################################################
         
         # main program
         if len(self.__main_program) == 1:
-            (first, second, third) = include_in_config('main program',
-                                                       self.__main_program)
+            (first, second, third, fourth) = include_in_config('main program',
+                                                               self.__main_program)
             first_column += first
             second_column += second
             third_column += third
+            fourth_column += fourth
         
         # child programs
         if len(self.__child_programs) > 0:
-            (first, second, third) = include_in_config('other programs',
-                                                       self.__child_programs)
+            (first, second, third, fourth) = include_in_config('other programs',
+                                                               self.__child_programs)
             first_column += first
             second_column += second
             third_column += third
+            fourth_column += fourth
                 
         # main input files
         if len(self.__input_files) > 0:
-            (first, second, third) = include_in_config('main input files',
-                                                       self.__input_files)
+            (first, second, third, fourth) = include_in_config('main input files',
+                                                               self.__input_files)
             first_column += first
             second_column += second
             third_column += third
+            fourth_column += fourth
                 
         # child input files
         if len(self.__child_input_files) > 0:
-            (first, second, third) = include_in_config('other input files',
-                                                       self.__child_input_files)
+            (first, second, third, fourth) = include_in_config('other input files',
+                                                               self.__child_input_files)
             first_column += first
             second_column += second
             third_column += third
+            fourth_column += fourth
         
         # dependencies
         if len(self.__dependencies) > 0:
-            (first, second, third) = include_in_config('dependencies',
-                                                       self.__dependencies)
+            (first, second, third, fourth) = include_in_config('dependencies',
+                                                               self.__dependencies)
             first_column += first
             second_column += second
             third_column += third
+            fourth_column += fourth
             
         # exclude patterns
         # these patterns should be written using Unix shell-style wildcards,
@@ -1577,16 +1601,19 @@ class Experiment:
         first_column.append('[exclude]')
         second_column.append('')
         third_column.append('')
+        fourth_column.append('')
         
         # maximum lengths, for the purpose of formatting
         max_first = str(len(max(first_column, key=len)))
         max_second = str(len(max(second_column, key=len)))
+        max_third = str(len(max(third_column, key=len)))
         
-        format = '{:<%s}\t{:^%s}\t{:<1}\n' % (max_first, max_second)
+        format = '{:<%s}\t{:^%s}\t{:^%s}\t{:<1}\n' % (max_first, max_second, max_third)
         for i in range(len(first_column)):
             config_file += format.format(first_column[i],
                                          second_column[i],
-                                         third_column[i])
+                                         third_column[i],
+                                         fourth_column[i])
             
         try:
             f = open(utils.config_path, 'w')
