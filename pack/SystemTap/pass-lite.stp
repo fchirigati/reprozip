@@ -1,8 +1,15 @@
-## Code obtained and modified from Burrito System
-## Burrito System Paper: Philip J. Guo and Margo Seltzer. Burrito: Wrapping Your
-##  Lab Notebook in Computational Infrastructure. In Proceedings of the USENIX
-##  Workshop on the Theory and Practice of Provenance (TaPP), June 2012.
-## Many thanks to Philip Guo (http://pgbovine.net/)
+###############################################################################
+##
+## This file was extensively modified from the Burrito System code.
+## Burrito System Paper:
+##  - Philip J. Guo and Margo Seltzer. Burrito: Wrapping Your Lab Notebook in
+##    Computational Infrastructure. In Proceedings of the USENIX Workshop on
+##    the Theory and Practice of Provenance (TaPP), June 2012.
+## Developer: Philip Guo (http://pgbovine.net/)
+##
+## This file is part of ReproZip.
+##
+###############################################################################
 
 # A super-simple version of PASS, implemented using SystemTap
 # by Philip Guo, 2011-10-31

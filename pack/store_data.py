@@ -1,8 +1,15 @@
-# Modified from the Burrito System code
-# Burrito System Paper: Philip J. Guo and Margo Seltzer. Burrito: Wrapping Your
-#  Lab Notebook in Computational Infrastructure. In Proceedings of the USENIX
-#  Workshop on the Theory and Practice of Provenance (TaPP), June 2012.
-# Many thanks to Philip Guo (http://pgbovine.net/)
+###############################################################################
+##
+## This file was extensively modified from the Burrito System code.
+## Burrito System Paper:
+##  - Philip J. Guo and Margo Seltzer. Burrito: Wrapping Your Lab Notebook in
+##    Computational Infrastructure. In Proceedings of the USENIX Workshop on
+##    the Theory and Practice of Provenance (TaPP), June 2012.
+## Developer: Philip Guo (http://pgbovine.net/)
+##
+## This file is part of ReproZip.
+##
+###############################################################################
 
 # This code stores process information in a centralized MongoDB database
 

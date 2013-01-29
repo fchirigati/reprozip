@@ -1,11 +1,15 @@
-# Modified from the Burrito System code
-# Burrito System Paper: Philip J. Guo and Margo Seltzer. Burrito: Wrapping Your
-#  Lab Notebook in Computational Infrastructure. In Proceedings of the USENIX
-#  Workshop on the Theory and Practice of Provenance (TaPP), June 2012.
-# Many thanks to Philip Guo (http://pgbovine.net/)
-
-# Parses the raw output of pass-lite.stp and puts entries into MongoDB
-# Created: 2011-11-01
+###############################################################################
+##
+## This file was extensively modified from the Burrito System code.
+## Burrito System Paper:
+##  - Philip J. Guo and Margo Seltzer. Burrito: Wrapping Your Lab Notebook in
+##    Computational Infrastructure. In Proceedings of the USENIX Workshop on
+##    the Theory and Practice of Provenance (TaPP), June 2012.
+## Developer: Philip Guo (http://pgbovine.net/)
+##
+## This file is part of ReproZip.
+##
+###############################################################################
 
 import os
 import sys
