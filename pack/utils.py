@@ -11,6 +11,7 @@ rep_dir_var = '$REP_DIR$'
 
 # Variables that represent some directories to be used when packing the
 # experiment
+exp_dir = os.path.join(rep_dir_var, 'exp')
 vistrails_dir = os.path.join(rep_dir_var, 'vistrails')
 cltools_dir = os.path.join(rep_dir_var, 'vistrails', 'cltools')
 cp_dir = os.path.join(rep_dir_var, 'rz_cp')

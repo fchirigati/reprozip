@@ -370,7 +370,7 @@ class Experiment:
             file_ = file
             if file_.startswith(os.sep):
                 file_ = file_[1:]
-            file_dict[file] = os.path.join(utils.rep_dir_var, file_)
+            file_dict[file] = os.path.join(utils.exp_dir, file_)
                
             # symbolic links
             if self.__symlink_to_target.has_key(file):
@@ -631,9 +631,11 @@ class Experiment:
             main_name = 'rep-' + basename
             
         self.__user_dir = os.path.join(utils.user_dir_var, main_name)
+        self.__user_exp_dir = utils.exp_dir.replace(utils.rep_dir_var, self.__user_dir)
         
         # creating folder for the reproducible experiment
         self.__rep_dir = os.path.join(os.getcwd(), main_name)
+        self.__rep_exp_dir = utils.exp_dir.replace(utils.rep_dir_var, self.__rep_dir)
         if os.path.exists(self.__rep_dir):
             answer = ''
             while answer.upper() != 'Y' and answer.upper() != 'N':
@@ -719,12 +721,14 @@ class Experiment:
                     argv_dict[0]['value'] = os.sep.join(os.path.basename(program).split(utils.sep))
                     
                 else:
-                    argv_dict[0]['value'] = os.path.join(self.__user_dir, os.path.relpath(program, self.__rep_dir))
+                    argv_dict[0]['value'] = os.path.join(self.__user_dir,
+                                                         os.path.relpath(program, self.__rep_dir))
             else:
                 # if an error occurred
                 self.__main_program = {}
         else:
-            argv_dict[0]['value'] = os.path.join(self.__user_dir, argv_dict[0]['value'][1:])
+            argv_dict[0]['value'] = os.path.join(self.__user_exp_dir,
+                                                 argv_dict[0]['value'][1:])
                 
         # child programs
         for program in self.__child_programs:
@@ -742,11 +746,14 @@ class Experiment:
                         if in_cp_dir:
                             argv_dict[i]['value'] = os.sep.join(os.path.basename(input_file).split(utils.sep))
                         else:
-                            argv_dict[i]['value'] = os.path.join(self.__user_dir, os.path.relpath(input_file, self.__rep_dir))
+                            argv_dict[i]['value'] = os.path.join(self.__user_dir,
+                                                                 os.path.relpath(input_file, self.__rep_dir))
                 else: # file excluded by user -- assume data will be there when reproducing experiment
-                    argv_dict[i]['value'] = os.path.join(self.__user_dir, file_[1:])
+                    argv_dict[i]['value'] = os.path.join(self.__user_exp_dir,
+                                                         file_[1:])
             elif argv_dict[i]['output file']:
-                output_ = os.path.join(self.__rep_dir, os.path.dirname(argv_dict[i]['value'])[1:])
+                output_ = os.path.join(self.__rep_exp_dir,
+                                       os.path.dirname(argv_dict[i]['value'])[1:])
                 if not os.path.exists(output_):
                     os.mkdir(output_)
                 argv_dict[i]['value'] = os.path.join(self.__user_dir,
@@ -756,10 +763,12 @@ class Experiment:
                 output_ = argv_dict[i]['value']
                 if not os.path.exists(output_):
                     output_ = os.path.dirname(output_)
-                output_ = os.path.join(self.__rep_dir, output_[1:])
+                output_ = os.path.join(self.__rep_exp_dir,
+                                       output_[1:])
                 if not os.path.exists(output_):
                     os.mkdir(output_)
-                argv_dict[i]['value'] = os.path.join(self.__user_dir, argv_dict[i]['value'][1:])
+                argv_dict[i]['value'] = os.path.join(self.__user_exp_dir,
+                                                     argv_dict[i]['value'][1:])
                 
         # child input files
         for file_ in self.__child_input_files:
@@ -858,11 +867,11 @@ class Experiment:
                 lib_path = l_stdout[i][:l_stdout[i].index(':')]
                 if lib_path.startswith(os.sep):
                     lib_path = lib_path[1:]
-                dep_path = os.path.join(self.__rep_dir, lib_path)
+                dep_path = os.path.join(self.__rep_exp_dir, lib_path)
                 
                 # only including if path exists
                 if os.path.exists(dep_path):
-                    paths.append(os.path.join(self.__user_dir, lib_path))
+                    paths.append(os.path.join(self.__user_exp_dir, lib_path))
                         
             # now checking LD_LIBRARY_PATH in case we need to include something
             # from there
@@ -874,11 +883,11 @@ class Experiment:
             
                 if path.startswith(os.sep):
                     path = path[1:]
-                dep_path = os.path.join(self.__rep_dir, path)
+                dep_path = os.path.join(self.__rep_exp_dir, path)
                 
                 # only including if path exists
                 if os.path.exists(dep_path):
-                    paths.append(os.path.join(self.__user_dir, path))
+                    paths.append(os.path.join(self.__user_exp_dir, path))
                         
             paths = list(set(paths))
             ld_library_path = ':'.join(paths)
@@ -913,11 +922,11 @@ class Experiment:
                 
                 if path.startswith(os.sep):
                     path = path[1:]
-                dep_path = os.path.join(self.__rep_dir, path)
+                dep_path = os.path.join(self.__rep_exp_dir, path)
                 
                 # only including if path exists
                 if os.path.exists(dep_path):
-                    paths.append(os.path.join(self.__user_dir, path))
+                    paths.append(os.path.join(self.__user_exp_dir, path))
             
             # also verifying the PYTHONPATH environment variable, if already defined
             # this variable may be only defined for the execution, and in this case,
@@ -929,11 +938,11 @@ class Experiment:
             
                 if path.startswith(os.sep):
                     path = path[1:]
-                dep_path = os.path.join(self.__rep_dir, path)
+                dep_path = os.path.join(self.__rep_exp_dir, path)
                 
                 # only including if path exists
                 if os.path.exists(dep_path):
-                    paths.append(os.path.join(self.__user_dir, path))
+                    paths.append(os.path.join(self.__user_exp_dir, path))
                         
             paths = list(set(paths))  
             pythonpath = ':'.join(paths)
@@ -945,10 +954,10 @@ class Experiment:
             
                 
         # HOME environment variable
-        home_dir = os.path.join(self.__rep_dir, os.getenv('HOME')[1:])
+        home_dir = os.path.join(self.__rep_exp_dir, os.getenv('HOME')[1:])
         homepath = None
         if os.path.exists(home_dir):
-            homepath = os.path.join(self.__user_dir, os.getenv('HOME')[1:])
+            homepath = os.path.join(self.__user_exp_dir, os.getenv('HOME')[1:])
             wrapper.set_env('HOME', homepath)
             env_var['HOME'] = homepath
             
@@ -1013,11 +1022,11 @@ class Experiment:
                 n_value = value
                 if value.startswith(os.sep):
                     n_value = value[1:]
-                dep_path = os.path.join(self.__rep_dir, n_value)
+                dep_path = os.path.join(self.__rep_exp_dir, n_value)
                 
                 # 'value' can be either a directory or another type of variable
                 if os.path.exists(dep_path):
-                    values.append(os.path.join(self.__user_dir, n_value))
+                    values.append(os.path.join(self.__user_exp_dir, n_value))
                 else:
                     values.append(value)
             
@@ -1027,7 +1036,7 @@ class Experiment:
                 env_var[var] = "'%s'" %env_values.strip("'")
             
         # pwd
-        pwd = os.path.join(self.__user_dir, self.__prov_tree.root.execve_pwd[1:])
+        pwd = os.path.join(self.__user_exp_dir, self.__prov_tree.root.execve_pwd[1:])
         wrapper.set_working_dir(pwd)
         
         # stderr
