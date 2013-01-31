@@ -119,14 +119,19 @@ probe syscall.write.return {
 }
 
 # Symlinks
-# better use readlinkat rather than readlink
-# since, if the path is relative, we need to take
-# its absolute path
 #probe syscall.readlink.return {
-#    pathname = user_string($path)
-#    buf = user_string($buf)
+#    symlink = user_string($path)
+#    target = user_string_n($buf, $bufsiz)
 #    print_header()
-#    printf("SYMLINK||%s||%s\n", pathname, buf)
+#    printf("SYMLINK||%s||%s\n", symlink, target)
+#}
+
+#probe syscall.readlinkat.return {
+#    fd = __int32($dfd)
+#    symlink = user_string($pathname)
+#    target = user_string_n($buf, $bufsiz)
+#    print_header()
+#    printf("SYMLINK||%s||%s\n", symlink, target)
 #}
 
 
