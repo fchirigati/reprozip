@@ -789,7 +789,7 @@ class Experiment:
                 output_ = os.path.join(self.__rep_exp_dir,
                                        os.path.dirname(argv_dict[i]['value'])[1:])
                 if not os.path.exists(output_):
-                    os.mkdir(output_)
+                    os.makedirs(output_)
                 argv_dict[i]['value'] = os.path.join(self.__user_dir,
                                                      os.path.relpath(output_, self.__rep_dir),
                                                      os.path.basename(argv_dict[i]['value']))
@@ -800,7 +800,7 @@ class Experiment:
                 output_ = os.path.join(self.__rep_exp_dir,
                                        output_[1:])
                 if not os.path.exists(output_):
-                    os.mkdir(output_)
+                    os.makedirs(output_)
                 argv_dict[i]['value'] = os.path.join(self.__user_exp_dir,
                                                      argv_dict[i]['value'][1:])
                 
