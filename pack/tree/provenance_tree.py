@@ -229,7 +229,7 @@ class Node:
                     
         # checking if program is a symbolic link
         if os.path.islink(self.__program):
-            target = os.readlink(self.__program)
+            target = os.path.realpath(self.__program)
             if not os.path.isabs(target):
                 target = os.path.normpath(os.path.join(os.path.dirname(self.__program), target))
             self.__symlink_to_target[self.__program] = target

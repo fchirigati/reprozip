@@ -258,11 +258,11 @@ if __name__ == '__main__':
     # symbolic links
     
     # getting the mapping
-    symlink_to_target = {}
+    symlink_chain = {}
     mapping_file = os.path.join(exp_dir, os.path.basename(utils.symlink_path))
     try:
         f = open(mapping_file, 'r')
-        symlink_to_target = pickle.load(f)
+        symlink_chain = pickle.load(f)
         f.close()
     except:
         print '<error> Could not de-serialize object structures'
@@ -270,12 +270,15 @@ if __name__ == '__main__':
         sys.exit(1)
         
     # creating the symbolic links
-    for symlink in symlink_to_target:
-        target = symlink_to_target[symlink].replace(utils.user_dir_var, os.path.normpath(wdir))
-        symlink = symlink.replace(utils.user_dir_var, os.path.normpath(wdir))
+    for chain in symlink_chain.values():
+        for i in range(len(chain)-1, 0, -1):
+            symlink = chain[i-1].replace(utils.user_dir_var, os.path.normpath(wdir))
+            target = chain[i].replace(utils.user_dir_var, os.path.normpath(wdir))
         
-        if os.path.exists(symlink):
-            os.remove(symlink)
-        os.symlink(target, symlink)
+            if os.path.exists(symlink):
+                os.remove(symlink)
+            if not os.path.exists(os.path.dirname(symlink)):
+                os.makedirs(os.path.dirname(symlink))
+            os.symlink(target, symlink)
             
     print '** Experiment successfully unpacked in "%s" **' % exp_dir

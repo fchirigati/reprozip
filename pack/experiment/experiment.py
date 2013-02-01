@@ -74,8 +74,8 @@ class Experiment:
         
         # symbolic links
         self.__symlink_to_target = {}
+        self.__symlink_chain = {} # 'key' is the first symbolic link, and 'value' is a list containing the chain
         self.__targets = {} # 'key' is original file, and 'value' is the new file
-        self.__rep_symlink_to_target = {} # used for the unpacking step
         
         # programs
         self.__main_program = {}
@@ -380,6 +380,26 @@ class Experiment:
         self.__child_input_files = dict((input_file, None) for input_file in child_input_files)
         self.__child_programs = dict((program, None) for program in child_programs)
         
+        # assuring the symbolic links are really symbolic links (sanity check)
+        # also getting long chains of symbolic links
+        for symlink in self.__symlink_to_target:
+            if not os.path.islink(symlink):
+                self.__symlink_to_target.pop(symlink)
+            target = self.__symlink_to_target[symlink]
+            path = symlink
+            chain = [symlink]
+            while os.path.islink(path):
+                next_target = os.readlink(path)
+                if not os.path.isabs(next_target):
+                    next_target = os.path.normpath(os.path.join(os.path.dirname(path), next_target))
+                chain.append(next_target)
+                path = next_target
+            if len(chain) < 3:
+                continue
+            if (path != target):
+                print "Something is wrong..."
+            self.__symlink_chain[symlink] = chain
+            
     
     def configure(self):
         """
@@ -736,7 +756,23 @@ class Experiment:
                     else:
                         rep_target = os.path.join(self.__user_dir, os.path.relpath(rep_target, self.__rep_dir))
                     
-                    self.__rep_symlink_to_target[rep_symlink] = rep_target
+                    # chain of symbolic links
+                    # not the best place to handle that, but ok...
+                    if self.__symlink_chain.has_key(original_file):
+                        chain = self.__symlink_chain[original_file]
+                        self.__symlink_chain.pop(original_file)
+                        
+                        # first symbolic link
+                        chain[0] = rep_symlink
+                        # target
+                        chain[-1] = rep_target
+                        
+                        for i in range(1, len(chain)-1):
+                            chain[i] = os.path.join(self.__user_exp_dir, chain[i][1:])
+                            
+                        self.__symlink_chain[rep_symlink] = chain
+                    else:
+                        self.__symlink_chain[rep_symlink] = [rep_symlink, rep_target]
             
             return (rep_file, in_cp_dir)
         
@@ -821,12 +857,12 @@ class Experiment:
             print '          error: %s' % sys.exc_info()[1]
             print '          The reproducible folder will not contain this file'
             
-        # storing symbolic link mapping in the reproducible directory
-        # this mapping will be used in the unpacking step
+        # storing chains of symbolic links in the reproducible directory
+        # these chains will be used in the unpacking step
         symlink_file = utils.symlink_path.replace(utils.rep_dir_var, self.__rep_dir)
         try:
             f = open(symlink_file, 'w')
-            pickle.dump(self.__rep_symlink_to_target, f, pickle.HIGHEST_PROTOCOL)
+            pickle.dump(self.__symlink_chain, f, pickle.HIGHEST_PROTOCOL)
             f.close()
         except:
             print '<error> Could not serialize object structures.'
