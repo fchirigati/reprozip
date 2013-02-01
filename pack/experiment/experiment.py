@@ -388,7 +388,9 @@ class Experiment:
             target = self.__symlink_to_target[symlink]
             path = symlink
             chain = [symlink]
-            while os.path.islink(path):
+            while (os.path.realpath(path) != path):
+                if not os.path.islink(path):
+                    break
                 next_target = os.readlink(path)
                 if not os.path.isabs(next_target):
                     next_target = os.path.normpath(os.path.join(os.path.dirname(path), next_target))
