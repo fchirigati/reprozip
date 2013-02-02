@@ -259,10 +259,11 @@ if __name__ == '__main__':
     
     # getting the mapping
     symlink_chain = {}
+    symlink_dir = {}
     mapping_file = os.path.join(exp_dir, os.path.basename(utils.symlink_path))
     try:
         f = open(mapping_file, 'r')
-        symlink_chain = pickle.load(f)
+        [symlink_chain, symlink_dir] = pickle.load(f)
         f.close()
     except:
         print '<error> Could not de-serialize object structures'
@@ -270,15 +271,30 @@ if __name__ == '__main__':
         sys.exit(1)
         
     # creating the symbolic links
-    for chain in symlink_chain.values():
+    for _symlink in symlink_chain:
+        if symlink_dir.has_key(_symlink):
+            dir_chain = symlink_dir[_symlink]
+            for i in range(len(dir_chain)-1, 0, -1):
+                if dir_chain[i-1] and dir_chain[i]:
+                    symlink = os.path.normpath(dir_chain[i-1].replace(utils.user_dir_var, wdir))
+                    target = os.path.normpath(dir_chain[i].replace(utils.user_dir_var, wdir))
+                
+                    if os.path.exists(symlink):
+                        os.remove(symlink)
+                    if not os.path.exists(os.path.dirname(symlink)):
+                        os.makedirs(os.path.dirname(symlink))
+                    os.symlink(target, symlink)
+                
+        chain = symlink_chain[_symlink]
         for i in range(len(chain)-1, 0, -1):
-            symlink = chain[i-1].replace(utils.user_dir_var, os.path.normpath(wdir))
-            target = chain[i].replace(utils.user_dir_var, os.path.normpath(wdir))
-        
-            if os.path.exists(symlink):
-                os.remove(symlink)
-            if not os.path.exists(os.path.dirname(symlink)):
-                os.makedirs(os.path.dirname(symlink))
-            os.symlink(target, symlink)
+            if chain[i-1] and chain[i]:
+                symlink = chain[i-1].replace(utils.user_dir_var, os.path.normpath(wdir))
+                target = chain[i].replace(utils.user_dir_var, os.path.normpath(wdir))
+            
+                if os.path.exists(symlink):
+                    os.remove(symlink)
+                if not os.path.exists(os.path.dirname(symlink)):
+                    os.makedirs(os.path.dirname(symlink))
+                os.symlink(target, symlink)
             
     print '** Experiment successfully unpacked in "%s" **' % exp_dir

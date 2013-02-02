@@ -75,6 +75,7 @@ class Experiment:
         # symbolic links
         self.__symlink_to_target = {}
         self.__symlink_chain = {} # 'key' is the first symbolic link, and 'value' is a list containing the chain
+        self.__symlink_dir = {} # 'key' is a symbolic link, and 'value' is a chain of directory symbolic links necessary for the 'key'
         self.__targets = {} # 'key' is original file, and 'value' is the new file
         
         # programs
@@ -380,6 +381,14 @@ class Experiment:
         self.__child_input_files = dict((input_file, None) for input_file in child_input_files)
         self.__child_programs = dict((program, None) for program in child_programs)
         
+        # function to remove duplicates of a list
+        def remove_duplicates(l):
+           no_duplicates = []
+           for e in l:
+               if e not in no_duplicates:
+                   no_duplicates.append(e)
+           return no_duplicates
+        
         # assuring the symbolic links are really symbolic links (sanity check)
         # also getting long chains of symbolic links
         for symlink in self.__symlink_to_target:
@@ -388,19 +397,47 @@ class Experiment:
             target = self.__symlink_to_target[symlink]
             path = symlink
             chain = [symlink]
+            dir_chain = []
             while (os.path.realpath(path) != path):
                 if not os.path.islink(path):
-                    break
-                next_target = os.readlink(path)
-                if not os.path.isabs(next_target):
-                    next_target = os.path.normpath(os.path.join(os.path.dirname(path), next_target))
-                chain.append(next_target)
-                path = next_target
+                    # we have a directory that is a symbolic link!
+                    common_prefix = os.path.commonprefix([path, os.path.realpath(path)])
+                    sub_dirs = path.replace(common_prefix, '').split(os.sep)
+                    dir_link = common_prefix
+                    while sub_dirs != []:
+                        dir_link = os.path.normpath(os.path.join(dir_link, sub_dirs[0]))
+                        sub_dirs.pop(0)
+                        if os.path.islink(dir_link):
+                            if dir_chain == []:
+                                dir_chain.append(dir_link)
+                            elif dir_chain[-1] != dir_link:
+                                dir_chain.append(None)
+                                dir_chain.append(dir_link)
+                            next_target = os.readlink(dir_link)
+                            if not os.path.isabs(next_target):
+                                next_target = os.path.normpath(os.path.join(os.path.dirname(dir_link), next_target))
+                            dir_chain.append(next_target)
+                            path = os.path.normpath(os.path.join(next_target, os.sep.join(sub_dirs)))
+                            chain.append(None)
+                            chain.append(path)
+                            break
+                    if sub_dirs == []:
+                        print "Something is wrong..."
+                        break
+                else:
+                    next_target = os.readlink(path)
+                    if not os.path.isabs(next_target):
+                        next_target = os.path.normpath(os.path.join(os.path.dirname(path), next_target))
+                    chain.append(next_target)
+                    path = next_target
             if len(chain) < 3:
                 continue
             if (path != target):
                 print "Something is wrong..."
+                
             self.__symlink_chain[symlink] = chain
+            if dir_chain != []:
+                self.__symlink_dir[symlink] = dir_chain
             
     
     def configure(self):
@@ -770,11 +807,23 @@ class Experiment:
                         chain[-1] = rep_target
                         
                         for i in range(1, len(chain)-1):
-                            chain[i] = os.path.join(self.__user_exp_dir, chain[i][1:])
+                            if chain[i]:
+                                chain[i] = os.path.join(self.__user_exp_dir, chain[i][1:])
                             
                         self.__symlink_chain[rep_symlink] = chain
                     else:
                         self.__symlink_chain[rep_symlink] = [rep_symlink, rep_target]
+                    
+                    # symbolic links between directories
+                    if self.__symlink_dir.has_key(original_file):
+                        chain = self.__symlink_dir[original_file]
+                        self.__symlink_dir.pop(original_file)
+                        
+                        for i in range(len(chain)):
+                            if chain[i]:
+                                chain[i] = os.path.join(self.__user_exp_dir, chain[i][1:])
+                            
+                        self.__symlink_dir[rep_symlink] = chain
             
             return (rep_file, in_cp_dir)
         
@@ -864,7 +913,8 @@ class Experiment:
         symlink_file = utils.symlink_path.replace(utils.rep_dir_var, self.__rep_dir)
         try:
             f = open(symlink_file, 'w')
-            pickle.dump(self.__symlink_chain, f, pickle.HIGHEST_PROTOCOL)
+            pickle.dump([self.__symlink_chain, self.__symlink_dir],
+                        f, pickle.HIGHEST_PROTOCOL)
             f.close()
         except:
             print '<error> Could not serialize object structures.'
