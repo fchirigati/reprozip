@@ -398,7 +398,7 @@ class Experiment:
             path = symlink
             chain = [symlink]
             dir_chain = []
-            while (os.path.realpath(path) != path):
+            while (os.path.realpath(path) != os.path.normpath(path)):
                 if not os.path.islink(path):
                     # we have a directory that is a symbolic link!
                     common_prefix = os.path.commonprefix([path, os.path.realpath(path)])
