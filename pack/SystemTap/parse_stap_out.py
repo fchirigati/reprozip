@@ -660,7 +660,7 @@ class Process:
         elif entry.syscall_name == 'EXIT_GROUP':
             self.mark_exit(entry.timestamp, entry.exit_code)
             self._mark_changed(entry)
-            return True # bye, sucka!
+            return True
         
         elif entry.syscall_name == 'EXECVE':
             # Optimization: REMOVE previous phase if it was empty:

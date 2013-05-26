@@ -96,13 +96,14 @@ class Node:
 
 
     def set_execve_env(self, value):
-        envs = value.split(utils.sep_envs)
-        for env in envs:
-            if env != '':
-                env_var = env.split(utils.sep_env)
-                env_name = env_var[0]
-                env_value = env_var[1]
-                self.__execve_env[env_name] = env_value
+        if value != 'None':
+            envs = value.split(utils.sep_envs)
+            for env in envs:
+                if env != '':
+                    env_var = env.split(utils.sep_env)
+                    env_name = env_var[0]
+                    env_value = env_var[1]
+                    self.__execve_env[env_name] = env_value
 
 
     def get_dependencies(self):
@@ -167,76 +168,77 @@ class Node:
 
 
     def set_execve_argv(self, value):
-        self.__execve_argv = value
-        
-        argv = self.__execve_argv.split()
-        for i in range(len(argv)):
-            value = argv[i]
-            prefix = None
-            if '=' in argv[i]:
-                prefix = argv[i][:argv[i].index('=') + 1]
-                value = argv[i][argv[i].index('=') + 1:] 
-            elif argv[i][0] == '-':
-                continue
-            suffix = os.path.splitext(value)[1]
-            if suffix == '':
-                suffix = None
-            self.__argv_dict.append({'value': value,
-                                     'input file': False,
-                                     'output file': False,
-                                     'dir': False,
-                                     'flag': None,
-                                     'prefix': prefix,
-                                     'suffix': suffix})
-            # getting the flag, if any
-            if (argv[i-1][0] == '-') and ('=' not in argv[i-1]):
-                self.__argv_dict[-1]['flag'] = argv[i-1]
-                
-        self.__program = self.__argv_dict[0]['value']
-        
-        # here, we check if the program is called using an absolute path
-        # absolute paths may indicate hard-coded paths, and that may cause problems when
-        # trying to reproduce the experiment
-        # then, if the program is being called using a relative path, we try
-        # to get the absolute path by looking at the current working directory
-        # finally, we check if the program is in PATH
-        if os.path.isabs(self.__program):
-            if self.__parent_node:
-#                print '<warning> The program "%s" might be being called using a hard-coded absolute path.' % os.path.basename(self.__program)
-#                print '          Hard-coded absolute paths make it difficult to reproduce the experiment.'
-                pass
-        else:
-            path = os.path.normpath(os.path.join(self.__execve_pwd,
-                                    self.__program))
-            if os.path.exists(path):
-                self.__program = path
-                self.__argv_dict[0]['value'] = path
-            else:
-                # program is in PATH
-                # need to find where it is located
-                try:
-                    p = subprocess.Popen(['which', self.__program],
-                                         stdout=subprocess.PIPE,
-                                         stderr=subprocess.PIPE)
-                    (stdout, stderr) = p.communicate()
-                except:
-                    print '<error> Error while finding out the location of program %s' % self.__program
-                    print '        %s' % sys.exc_info()[1]
-                    sys.exit(1)
-                if stdout != '':
-                    self.__program = stdout.split()[0]
-                    self.__argv_dict[0]['value'] = self.__program
+        if value != 'None':
+            self.__execve_argv = value
+            argv = self.__execve_argv.split()
+            for i in range(len(argv)):
+                value = argv[i]
+                prefix = None
+                if '=' in argv[i]:
+                    prefix = argv[i][:argv[i].index('=') + 1]
+                    value = argv[i][argv[i].index('=') + 1:] 
+                elif argv[i][0] == '-':
+                    continue
+                suffix = os.path.splitext(value)[1]
+                if suffix == '':
+                    suffix = None
+                self.__argv_dict.append({'value': value,
+                                         'input file': False,
+                                         'output file': False,
+                                         'dir': False,
+                                         'flag': None,
+                                         'prefix': prefix,
+                                         'suffix': suffix})
+                # getting the flag, if any
+                if (argv[i-1][0] == '-') and ('=' not in argv[i-1]):
+                    self.__argv_dict[-1]['flag'] = argv[i-1]
                     
-        # checking if program is a symbolic link
-        if os.path.islink(self.__program):
-            target = os.path.realpath(self.__program)
-            if not os.path.isabs(target):
-                target = os.path.normpath(os.path.join(os.path.dirname(self.__program), target))
-            self.__symlink_to_target[self.__program] = target
+            self.__program = self.__argv_dict[0]['value']
+            
+            # here, we check if the program is called using an absolute path
+            # absolute paths may indicate hard-coded paths, and that may cause problems when
+            # trying to reproduce the experiment
+            # then, if the program is being called using a relative path, we try
+            # to get the absolute path by looking at the current working directory
+            # finally, we check if the program is in PATH
+            if os.path.isabs(self.__program):
+                if self.__parent_node:
+    #                print '<warning> The program "%s" might be being called using a hard-coded absolute path.' % os.path.basename(self.__program)
+    #                print '          Hard-coded absolute paths make it difficult to reproduce the experiment.'
+                    pass
+            else:
+                path = os.path.normpath(os.path.join(self.__execve_pwd,
+                                        self.__program))
+                if os.path.exists(path):
+                    self.__program = path
+                    self.__argv_dict[0]['value'] = path
+                else:
+                    # program is in PATH
+                    # need to find where it is located
+                    try:
+                        p = subprocess.Popen(['which', self.__program],
+                                             stdout=subprocess.PIPE,
+                                             stderr=subprocess.PIPE)
+                        (stdout, stderr) = p.communicate()
+                    except:
+                        print '<error> Error while finding out the location of program %s' % self.__program
+                        print '        %s' % sys.exc_info()[1]
+                        sys.exit(1)
+                    if stdout != '':
+                        self.__program = stdout.split()[0]
+                        self.__argv_dict[0]['value'] = self.__program
+                        
+            # checking if program is a symbolic link
+            if os.path.islink(self.__program):
+                target = os.path.realpath(self.__program)
+                if not os.path.isabs(target):
+                    target = os.path.normpath(os.path.join(os.path.dirname(self.__program), target))
+                self.__symlink_to_target[self.__program] = target
 
 
     def set_execve_pwd(self, value):
-        self.__execve_pwd = os.path.normpath(value)
+        if value != 'None':
+            self.__execve_pwd = os.path.normpath(value)
 
 
     def set_files_read(self, value):

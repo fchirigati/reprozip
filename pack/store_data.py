@@ -128,12 +128,12 @@ class Provenance:
         # and isn't the parent of any previously-exited process or
         # currently-active process, then there is NO POINT in storing it
         # into the database.
-        if (not p.phases):
-            active_process_ppids = set()
-            for p in self.pid_to_active_processes.itervalues():
-                active_process_ppids.add(p.ppid)
-            if (p.pid not in self.exited_process_ppids) and (p.pid not in active_process_ppids):
-                skip_me = True
+#        if (not p.phases):
+#            active_process_ppids = set()
+#            for p in self.pid_to_active_processes.itervalues():
+#                active_process_ppids.add(p.ppid)
+#            if (p.pid not in self.exited_process_ppids) and (p.pid not in active_process_ppids):
+#                skip_me = True
         
         if not skip_me:
             self.save_tagged_db_entry(self.proc_col, p.serialize())

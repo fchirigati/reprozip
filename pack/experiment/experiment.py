@@ -366,7 +366,8 @@ class Experiment:
                 node = self.__prov_tree.nodes[id]
                 input_files = node.input_files
                 child_input_files += input_files
-                child_programs.append(node.program)
+                if node.program:
+                    child_programs.append(node.program)
                 
         # assuring no intersection between child input files and main input files
         child_input_files = list(set(child_input_files) -
@@ -1790,6 +1791,7 @@ class Experiment:
             # here, phases from same process are stored as separate nodes
             # TODO: should store phases inside same node?
             main_id = None
+            
             for i in range(len(exec_wf['phases'])):
                 
                 execve_argv = str(exec_wf['phases'][i]['execve_argv'])
@@ -1805,8 +1807,8 @@ class Experiment:
                 
                 symlinks = exec_wf['phases'][i]['symlinks'] or [] # list of dictionaries
     
-                if execve_argv == 'None':
-                    continue
+#                if execve_argv == 'None':
+#                    continue
                 
                 # creating node and adding it to the provenance tree
                 node = Node(id)
@@ -1823,6 +1825,17 @@ class Experiment:
                     main_id = self.__prov_tree.add_node(node)
                 else:
                     c_id = self.__prov_tree.add_node(node)
+                    
+            # a process may not have phases, but it is still important to
+            # consider it, since the experiment may need executions
+            # from its child processes
+            if len(exec_wf['phases']) == 0:
+                
+                # creating node and adding it to the provenance tree
+                node = Node(id)
+                node.pid = c_pid
+                
+                main_id = self.__prov_tree.add_node(node)
             
             if not main_id:
                 continue
