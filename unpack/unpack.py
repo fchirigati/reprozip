@@ -197,21 +197,14 @@ if __name__ == '__main__':
     if not os.path.exists(cltools_dir):
         try:
             os.mkdir(cltools_dir)
+            for wrapper in wrappers:
+                wrapper_file = os.path.join(wrapper_dir, wrapper)
+                n_wrapper_file = os.path.join(cltools_dir, wrapper)
+                shutil.copyfile(wrapper_file, n_wrapper_file)
         except:
-            print '<error> Could not create CLTools folder'
-            print '        %s' % sys.exc_info()[1]
-            print '        Make sure VisTrails is installed'
-            sys.exit(1)
-    
-    try:
-        for wrapper in wrappers:
-            wrapper_file = os.path.join(wrapper_dir, wrapper)
-            n_wrapper_file = os.path.join(cltools_dir, wrapper)
-            shutil.copyfile(wrapper_file, n_wrapper_file)
-    except:
-        print '<error> Could not copy wrapper to the CLTools directory'
-        print '        %s' %(sys.exc_info()[1])
-        sys.exit(1)
+            print '<warning> Error while copying wrappers to VisTrails'
+            print '          %s' % sys.exc_info()[1]
+            print '          Wrappers are inside the package, and you may copy them manually'
         
     # copying files and dependencies, if inside the copy directory
     cp_dir = os.path.join(exp_dir, os.path.basename(utils.cp_dir))
