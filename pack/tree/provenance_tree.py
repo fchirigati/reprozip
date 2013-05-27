@@ -275,6 +275,12 @@ class Node:
         and also recorded as "files read" by the process; input directories
         are also present in the command line, and they match the directory name
         of at least one input file.
+        If in the command line, name of input file is not complete - for instance,
+        if it does not include extension ('/home/aneurism') - it will not be
+        considered an input file, since the comparison will not be true - for
+        instance, '/home/aneurism' with '/home/aneurism.txt'.
+        Since there is no way to know how the experiment process it, it is better
+        to consider it as an input string, than as an input file.
         """
         
         self.__input_files = []
@@ -316,6 +322,12 @@ class Node:
         are present in the command line; output directories are also present
         in the command line, and they match the directory name of at least
         one output file.
+        If in the command line, name of output file is not complete - for instance,
+        if it does not include extension ('/home/aneurism') - it will not be
+        considered an output file, since the comparison will not be true - for
+        instance, '/home/aneurism' with '/home/aneurism.out' or '/home/aneurism_2.out'.
+        Since there is no way to know how the experiment process it, it is better
+        to consider it as an input string, than as an output file.
         """
         
         self.__output_files = []
