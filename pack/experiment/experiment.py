@@ -921,51 +921,8 @@ class Experiment:
             print '<error> Could not serialize object structures.'
             print '        %s' % sys.exc_info()[1]
             sys.exit(1)
-    
-        # creating CLTools wrapper
-        # assuming that the first argument is the main command
-        command = argv_dict[0]['value']
-        num_args = len(argv_dict) - 1
         
-        wrapper = Wrapper()
-        
-        ## arguments
-        input_id = 0
-        output_id = 0
-        if (num_args != 0):
-            for i in range(1, len(argv_dict), 1):
-                if argv_dict[i]['output file']:
-                    output_id += 1
-                    wrapper.add_arg(type     = 'Output',
-                                    name     = 'output%d' % output_id,
-                                    _class   = "File",
-                                    flag     = argv_dict[i]['flag'],
-                                    prefix   = argv_dict[i]['prefix'],
-                                    suffix   = argv_dict[i]['suffix'],
-                                    required = True)
-                elif argv_dict[i]['input file']:
-                    input_id += 1
-                    wrapper.add_arg(type     = 'Input',
-                                    name     = 'input%d' % input_id,
-                                    _class   = "File",
-                                    flag     = argv_dict[i]['flag'],
-                                    prefix   = argv_dict[i]['prefix'],
-                                    suffix   = None,
-                                    required = True)
-                else:
-                    input_id += 1
-                    wrapper.add_arg(type     = 'Input',
-                                    name     = 'input%d' % input_id,
-                                    _class   = "String",
-                                    flag     = argv_dict[i]['flag'],
-                                    prefix   = argv_dict[i]['prefix'],
-                                    suffix   = None,
-                                    required = True)
-                    
-        #  main command
-        wrapper.set_command(command)
-        
-        # setting environment variables
+        # environment variables
         env_var = {}
 
         ld_library_path = ''
@@ -1021,10 +978,7 @@ class Experiment:
             print '        LD_LIBRARY_PATH will not be set'
             
         if ld_library_path != '':
-            wrapper.set_env('LD_LIBRARY_PATH', ld_library_path)
             env_var['LD_LIBRARY_PATH'] = ld_library_path
-            #wrapper.set_env('LD_LIBRARY_PATH', ld_library_path + utils.ld_library_path)
-        
             
         pythonpath = ''
             
@@ -1071,19 +1025,14 @@ class Experiment:
             pythonpath = ':'.join(paths)
             
             if pythonpath != '':
-                wrapper.set_env('PYTHONPATH', pythonpath)
                 env_var['PYTHONPATH'] = pythonpath
-                #wrapper.set_env('PYTHONPATH', pythonpath + utils.pythonpath)
-            
                 
         # HOME environment variable
         home_dir = os.path.join(self.__rep_exp_dir, os.getenv('HOME')[1:])
         homepath = None
         if os.path.exists(home_dir):
             homepath = os.path.join(self.__user_exp_dir, os.getenv('HOME')[1:])
-            wrapper.set_env('HOME', homepath)
             env_var['HOME'] = homepath
-            
             
         # taking care of other environment variables
         # here, we need to be careful because an environment variable may
@@ -1159,45 +1108,12 @@ class Experiment:
             
             env_values = ':'.join(values)
             if env_values != '':
-                wrapper.set_env(var, "'%s'" %env_values.strip("'"))
                 env_var[var] = "'%s'" %env_values.strip("'")
-            
-        # pwd
+        
+        # pwd        
         pwd = os.path.join(self.__user_exp_dir, self.__prov_tree.root.execve_pwd[1:])
-        wrapper.set_working_dir(pwd)
-        
-        # stderr
-        wrapper.add_stderr(name     = 'stderr',
-                           _class   = 'String',
-                           required = True)
-    
-        #  stdout
-        wrapper.add_stdout(name     = 'stdout',
-                           _class   = 'String',
-                           required = True)
-        
-        # saving wrapper
-        wrapper_dir = utils.cltools_dir.replace(utils.rep_dir_var,
-                                                self.__rep_dir)
-        try:
-            os.makedirs(wrapper_dir)
-        except:
-            print '<error> Could not create CLTools directory'
-            print '        %s' % sys.exc_info()[1]
-            sys.exit(1)
-            
-        wrapper_file = os.path.join(wrapper_dir, main_name + '.clt')
-        try:
-            f = open(wrapper_file, 'w')
-            f.write(wrapper.get_str())
-            f.close()
-        except:
-            print '<error> Could not create CLTools wrapper.'
-            print '        %s' % sys.exc_info()[1]
-            sys.exit(1)
             
         # executable script
-        # in case the user does not want to use the workflow
         script = ''
         
         script += 'pushd %s\n' %pwd
@@ -1224,6 +1140,99 @@ class Experiment:
             print '        %s' % sys.exc_info()[1]
             sys.exit(1)
         
+        # generating VisTrails workflow
+        self.generate_vt_workflow(main_name, argv_dict, env_var, pwd)
+        
+            
+    def generate_vt_workflow(self, name, argv_dict, env_var, pwd):
+        """
+        Method that generates a VisTrails workflow for the experiment.
+        """
+        
+        # creating CLTools wrapper
+        # assuming that the first argument is the main command
+        command = argv_dict[0]['value']
+        num_args = len(argv_dict) - 1
+        
+        main_name = name
+        
+        wrapper = Wrapper()
+        
+        ## arguments
+        input_id = 0
+        output_id = 0
+        if (num_args != 0):
+            for i in range(1, len(argv_dict), 1):
+                if argv_dict[i]['output file']:
+                    output_id += 1
+                    wrapper.add_arg(type     = 'Output',
+                                    name     = 'output%d' % output_id,
+                                    _class   = "File",
+                                    flag     = argv_dict[i]['flag'],
+                                    prefix   = argv_dict[i]['prefix'],
+                                    suffix   = argv_dict[i]['suffix'],
+                                    required = True)
+                elif argv_dict[i]['input file']:
+                    input_id += 1
+                    wrapper.add_arg(type     = 'Input',
+                                    name     = 'input%d' % input_id,
+                                    _class   = "File",
+                                    flag     = argv_dict[i]['flag'],
+                                    prefix   = argv_dict[i]['prefix'],
+                                    suffix   = None,
+                                    required = True)
+                else:
+                    input_id += 1
+                    wrapper.add_arg(type     = 'Input',
+                                    name     = 'input%d' % input_id,
+                                    _class   = "String",
+                                    flag     = argv_dict[i]['flag'],
+                                    prefix   = argv_dict[i]['prefix'],
+                                    suffix   = None,
+                                    required = True)
+                    
+        #  main command
+        wrapper.set_command(command)
+        
+        # setting environment variables
+        for env in env_var:
+            wrapper.set_env(env, env_var[env])
+            
+        # pwd
+        wrapper.set_working_dir(pwd)
+        
+        # stderr
+        wrapper.add_stderr(name     = 'stderr',
+                           _class   = 'String',
+                           required = True)
+    
+        #  stdout
+        wrapper.add_stdout(name     = 'stdout',
+                           _class   = 'String',
+                           required = True)
+        
+        # saving wrapper
+        wrapper_dir = utils.cltools_dir.replace(utils.rep_dir_var,
+                                                self.__rep_dir)
+        try:
+            os.makedirs(wrapper_dir)
+        except:
+            print '<error> Could not create CLTools directory.'
+            print '        %s' % sys.exc_info()[1]
+            print '        ReproZip will not create the VisTrails workflow.'
+            return False
+            
+        wrapper_file = os.path.join(wrapper_dir, main_name + '.clt')
+        try:
+            f = open(wrapper_file, 'w')
+            f.write(wrapper.get_str())
+            f.close()
+        except:
+            print '<error> Could not create CLTools wrapper.'
+            print '        %s' % sys.exc_info()[1]
+            print '        ReproZip will not create the VisTrails workflow.'
+            return False
+            
         # VisTrails workflow
         wf = VTWorkflow('1.0.2')
         
@@ -1575,7 +1584,9 @@ class Experiment:
         except:
             print '<error> Could not create VisTrails workflow.'
             print '        %s' % sys.exc_info()[1]
-            sys.exit(1)
+            return False
+        
+        return True
             
     def pack(self):
         """
@@ -1602,7 +1613,6 @@ class Experiment:
         shutil.rmtree(self.__rep_dir)
             
         print '** Experiment packed in %s with success **' % (package)
-
 
     def __gen_config_file(self):
         """
