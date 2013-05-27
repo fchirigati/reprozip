@@ -1290,7 +1290,6 @@ class Experiment:
         # if the argument is an output file, it stores a 'filesink_module' and
         # a 'persistent_module'; otherwise, it stores a 'string_module'
         module_map = [{}]
-        output_id = 1
         
         input_id = 0
         output_id = 0
@@ -1447,7 +1446,6 @@ class Experiment:
                 
                 module_map.append({'persistent_module': persistent_module,
                                    'filesink_module': filesink_module})
-                output_id += 1
                 
             # not an input / output file
             else:
