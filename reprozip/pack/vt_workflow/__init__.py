@@ -32,4 +32,6 @@
 ##
 ###############################################################################
 
-import experiment
+import reprozip.pack.vt_workflow.cltools_wrapper
+import reprozip.pack.vt_workflow.workflow
+import reprozip.pack.vt_workflow.workflow_utils

@@ -32,7 +32,7 @@
 ##
 ###############################################################################
 
-import utils
+import reprozip.utils
 import subprocess
 import sys
 import os
@@ -97,10 +97,10 @@ class Node:
 
     def set_execve_env(self, value):
         if value != 'None':
-            envs = value.split(utils.sep_envs)
+            envs = value.split(reprozip.utils.sep_envs)
             for env in envs:
                 if env != '':
-                    env_var = env.split(utils.sep_env)
+                    env_var = env.split(reprozip.utils.sep_env)
                     env_name = env_var[0]
                     env_value = env_var[1]
                     self.__execve_env[env_name] = env_value

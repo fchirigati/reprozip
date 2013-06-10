@@ -37,6 +37,8 @@ import json
 import datetime
 import os
 
+VERSION = '0.1.0-beta'
+
 # Variables that represent some directories that are to be replaced later
 # in the code
 user_dir_var = '$USER_DIR$'

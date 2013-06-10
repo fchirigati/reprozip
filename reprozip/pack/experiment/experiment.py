@@ -32,10 +32,10 @@
 ##
 ###############################################################################
 
-from vt_workflow.vt_workflow import VTWorkflow
-from vt_workflow.cltools_wrapper import Wrapper
-from tree.provenance_tree import Node, ProvenanceTree
-import utils
+from reprozip.pack.vt_workflow.workflow import VTWorkflow
+from reprozip.pack.vt_workflow.cltools_wrapper import Wrapper
+from reprozip.pack.tree.provenance_tree import Node, ProvenanceTree
+import reprozip.utils
 import shutil
 import stat
 import pickle
@@ -127,15 +127,15 @@ class Experiment:
     verbose = property(get_verbose, set_verbose, None, None)
     
     
-    def verbose_(self, args):
-        """
-        Verbose method.
-        """
-        if self.verbose:
-            for arg in args:
-                print arg
-        else:
-            pass
+#    def verbose_(self, args):
+#        """
+#        Verbose method.
+#        """
+#        if self.verbose:
+#            for arg in args:
+#                print arg
+#        else:
+#            pass
     
     
     def execute(self, working_dir, env):
@@ -279,12 +279,12 @@ class Experiment:
         root_node.set_files_written(files_written)
         root_node.set_symlink_to_target(symlinks)
         
-        self.verbose_(['main execve_argv: %s' %root_node.execve_argv,
-                       'main execve_pwd: %s' %root_node.execve_pwd,
-                       'main execve_env: %s' %str(root_node.execve_env),
-                       'main files_read: %s' %str(root_node.files_read),
-                       'main files_written: %s' %str(root_node.files_written),
-                       'main symlinks: %s\n' %str(root_node.symlink_to_target)])
+#        self.verbose_(['main execve_argv: %s' %root_node.execve_argv,
+#                       'main execve_pwd: %s' %root_node.execve_pwd,
+#                       'main execve_env: %s' %str(root_node.execve_env),
+#                       'main files_read: %s' %str(root_node.files_read),
+#                       'main files_written: %s' %str(root_node.files_written),
+#                       'main symlinks: %s\n' %str(root_node.symlink_to_target)])
         
         # setting the root node
         self.__prov_tree.set_root(root_node)
@@ -464,7 +464,7 @@ class Experiment:
             file_ = file
             if file_.startswith(os.sep):
                 file_ = file_[1:]
-            file_dict[file] = os.path.join(utils.exp_dir, file_)
+            file_dict[file] = os.path.join(reprozip.utils.exp_dir, file_)
                
             # symbolic links
             if self.__symlink_to_target.has_key(file):
@@ -521,12 +521,12 @@ class Experiment:
         for dependency in self.__dependencies:
             add_rep_file(dependency, self.__dependencies)
             
-        self.verbose_(['input files: %s' %str(self.__input_files),
-                       'output files: %s' %str(self.__output_files),
-                       'main program: %s' %str(self.__main_program),
-                       'child programs: %s' %str(self.__child_programs),
-                       'child input files: %s' %str(self.__child_input_files),
-                       'dependencies: %s' %str(self.__dependencies)])
+#        self.verbose_(['input files: %s' %str(self.__input_files),
+#                       'output files: %s' %str(self.__output_files),
+#                       'main program: %s' %str(self.__main_program),
+#                       'child programs: %s' %str(self.__child_programs),
+#                       'child input files: %s' %str(self.__child_input_files),
+#                       'dependencies: %s' %str(self.__dependencies)])
         
         # generate configuration file
         self.__gen_config_file()
@@ -537,17 +537,17 @@ class Experiment:
         Method to read and process the configuration file.
         """
         
-        if not os.path.exists(utils.config_path):
-            print '<error> Configuration file not found in %s' % os.path.dirname(utils.config_path)
+        if not os.path.exists(reprozip.utils.config_path):
+            print '<error> Configuration file not found in %s' % os.path.dirname(reprozip.utils.config_path)
             print '        Make sure you are in the right directory'
             sys.exit(1)
             
         # if configuration file was not modified, do not need to process it
-        if os.path.getmtime(utils.config_path) == self.__config_mtime:
+        if os.path.getmtime(reprozip.utils.config_path) == self.__config_mtime:
             return
         
         # opening file
-        f = open(utils.config_path, 'r')
+        f = open(reprozip.utils.config_path, 'r')
         config_info = f.read().splitlines()
         f.close()
         
@@ -724,12 +724,12 @@ class Experiment:
             basename = os.path.basename(sep[0])
             main_name = 'rep-' + basename
             
-        self.__user_dir = os.path.join(utils.user_dir_var, main_name)
-        self.__user_exp_dir = utils.exp_dir.replace(utils.rep_dir_var, self.__user_dir)
+        self.__user_dir = os.path.join(reprozip.utils.user_dir_var, main_name)
+        self.__user_exp_dir = reprozip.utils.exp_dir.replace(reprozip.utils.rep_dir_var, self.__user_dir)
         
         # creating folder for the reproducible experiment
         self.__rep_dir = os.path.join(os.getcwd(), main_name)
-        self.__rep_exp_dir = utils.exp_dir.replace(utils.rep_dir_var, self.__rep_dir)
+        self.__rep_exp_dir = reprozip.utils.exp_dir.replace(reprozip.utils.rep_dir_var, self.__rep_dir)
         if os.path.exists(self.__rep_dir):
             answer = ''
             while answer.upper() != 'Y' and answer.upper() != 'N':
@@ -756,11 +756,11 @@ class Experiment:
                 
         def include_file(original_file, rep_file, program=False):
             in_cp_dir = False
-            if utils.rep_dir_var not in rep_file:
+            if reprozip.utils.rep_dir_var not in rep_file:
                 in_cp_dir = True
-                basename = utils.sep.join(rep_file.split(os.sep))
-                rep_file = os.path.join(utils.cp_dir, basename)
-            rep_file = os.path.normpath(rep_file.replace(utils.rep_dir_var,
+                basename = reprozip.utils.sep.join(rep_file.split(os.sep))
+                rep_file = os.path.join(reprozip.utils.cp_dir, basename)
+            rep_file = os.path.normpath(rep_file.replace(reprozip.utils.rep_dir_var,
                                                          self.__rep_dir))
             try:
                 if not os.path.exists(os.path.dirname(rep_file)):
@@ -787,12 +787,12 @@ class Experiment:
                 
                 if rep_target:
                     if in_cp_dir:
-                        rep_symlink = os.sep.join(os.path.basename(rep_symlink).split(utils.sep))
+                        rep_symlink = os.sep.join(os.path.basename(rep_symlink).split(reprozip.utils.sep))
                     else:
                         rep_symlink = os.path.join(self.__user_dir, os.path.relpath(rep_symlink, self.__rep_dir))
                     
                     if target_in_cp_dir:
-                        rep_target = os.sep.join(os.path.basename(rep_target).split(utils.sep))
+                        rep_target = os.sep.join(os.path.basename(rep_target).split(reprozip.utils.sep))
                     else:
                         rep_target = os.path.join(self.__user_dir, os.path.relpath(rep_target, self.__rep_dir))
                     
@@ -840,7 +840,7 @@ class Experiment:
             if program:
                 # updating information
                 if in_cp_dir:
-                    argv_dict[0]['value'] = os.sep.join(os.path.basename(program).split(utils.sep))
+                    argv_dict[0]['value'] = os.sep.join(os.path.basename(program).split(reprozip.utils.sep))
                     
                 else:
                     argv_dict[0]['value'] = os.path.join(self.__user_dir,
@@ -866,7 +866,7 @@ class Experiment:
                     if input_file:
                         # updating information
                         if in_cp_dir:
-                            argv_dict[i]['value'] = os.sep.join(os.path.basename(input_file).split(utils.sep))
+                            argv_dict[i]['value'] = os.sep.join(os.path.basename(input_file).split(reprozip.utils.sep))
                         else:
                             argv_dict[i]['value'] = os.path.join(self.__user_dir,
                                                                  os.path.relpath(input_file, self.__rep_dir))
@@ -902,8 +902,8 @@ class Experiment:
             
         # saving configuration file inside package
         try:
-            shutil.copyfile(utils.config_path, os.path.join(self.__rep_dir,
-                                                            os.path.basename(utils.config_path)))
+            shutil.copyfile(reprozip.utils.config_path, os.path.join(self.__rep_dir,
+                                                            os.path.basename(reprozip.utils.config_path)))
         except:
             print '<warning> Could not copy configuration file'
             print '          error: %s' % sys.exc_info()[1]
@@ -911,7 +911,7 @@ class Experiment:
             
         # storing chains of symbolic links in the reproducible directory
         # these chains will be used in the unpacking step
-        symlink_file = utils.symlink_path.replace(utils.rep_dir_var, self.__rep_dir)
+        symlink_file = reprozip.utils.symlink_path.replace(reprozip.utils.rep_dir_var, self.__rep_dir)
         try:
             f = open(symlink_file, 'w')
             pickle.dump([self.__symlink_chain, self.__symlink_dir],
@@ -1129,7 +1129,7 @@ class Experiment:
             
         script += '\npopd'
             
-        script_file = utils.exec_path.replace(utils.rep_dir_var,
+        script_file = reprozip.utils.exec_path.replace(reprozip.utils.rep_dir_var,
                                               self.__rep_dir)
         try:
             f = open(script_file, 'w')
@@ -1212,7 +1212,7 @@ class Experiment:
                            required = True)
         
         # saving wrapper
-        wrapper_dir = utils.cltools_dir.replace(utils.rep_dir_var,
+        wrapper_dir = reprozip.utils.cltools_dir.replace(reprozip.utils.rep_dir_var,
                                                 self.__rep_dir)
         try:
             os.makedirs(wrapper_dir)
@@ -1572,7 +1572,7 @@ class Experiment:
                 wf.add_connection(source_port, dst_port, False)
         
         # saving workflow
-        wf_filename = os.path.join(utils.vistrails_dir.replace(utils.rep_dir_var, self.__rep_dir),
+        wf_filename = os.path.join(reprozip.utils.vistrails_dir.replace(reprozip.utils.rep_dir_var, self.__rep_dir),
                                    main_name + '.xml')
         
         try:
@@ -1760,7 +1760,7 @@ class Experiment:
                                          fourth_column[i])
             
         try:
-            f = open(utils.config_path, 'w')
+            f = open(reprozip.utils.config_path, 'w')
             f.write(config_file)
             f.close()
         except:
@@ -1768,9 +1768,9 @@ class Experiment:
             print '        %s' %(sys.exc_info()[1])
             sys.exit(1)
             
-        self.__config_mtime = os.path.getmtime(utils.config_path)
+        self.__config_mtime = os.path.getmtime(reprozip.utils.config_path)
             
-        print '** Configuration file created in "%s" **' % utils.config_path
+        print '** Configuration file created in "%s" **' % reprozip.utils.config_path
                         
 
     def __get_child_processes(self, id, db_collection, depth=1):

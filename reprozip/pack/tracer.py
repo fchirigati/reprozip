@@ -32,8 +32,8 @@
 ##
 ###############################################################################
 
-from utils import get_ms_since_epoch
-from store_data import Provenance
+from reprozip.utils import get_ms_since_epoch
+from reprozip.pack.store_data import Provenance
 import subprocess
 import time
 import sys

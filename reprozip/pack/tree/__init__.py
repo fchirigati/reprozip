@@ -32,6 +32,4 @@
 ##
 ###############################################################################
 
-import tracer
-import DTrace
-import SystemTap
+import reprozip.pack.tree.provenance_tree

@@ -32,50 +32,30 @@
 ##
 ###############################################################################
 
+import reprozip.utils
 import argparse
 import tarfile
 import shutil
 import sys
 import os
-import utils
 import pickle
 import stat
 
-if __name__ == '__main__':
-    
-    description = 'Unpacks an experiment produced by Pack.'
-    
-    exp_help = 'the experiment to be unpacked (a tar.gz file) - the whole path '
-    exp_help += 'should be specified'
-    
-    wdir_help = 'the working directory where the experiment should be extracted '
-    wdir_help += '(if different from the current one)'
-    
-    verbose_help = 'verbose option'
-    
-    parser = argparse.ArgumentParser(prog        = 'unpack',
-                                     description = description)
-    parser.add_argument('--version', '-v', action='version', version='%(prog)s 0.1')
-    parser.add_argument('exp', nargs='?', help=exp_help)
-    parser.add_argument('--wdir', '-w', nargs='?', help=wdir_help)
-    parser.add_argument('--verbose', action='store_true', help=verbose_help)
-    
-    namespace = parser.parse_args()
-    args = vars(namespace)
+def unpack(args):
     
     package = args['exp']
     wdir = args['wdir']
     verbose = args['verbose']
     
-    def verbose_(args):
-        """
-        Verbose function.
-        """
-        if verbose:
-            for arg in args:
-                print arg
-        else:
-            pass
+#    def verbose_(args):
+#        """
+#        Verbose function.
+#        """
+#        if verbose:
+#            for arg in args:
+#                print arg
+#        else:
+#            pass
     
     if not os.path.exists(package):
         print '<error> The package "%s" does not exist.' % package
@@ -128,20 +108,20 @@ if __name__ == '__main__':
     home = os.getenv('HOME')
     
     # replacing the directory inside the workflow, wrappers and executable
-    vt_dir = os.path.join(exp_dir, os.path.basename(utils.vistrails_dir))
+    vt_dir = os.path.join(exp_dir, os.path.basename(reprozip.utils.vistrails_dir))
     vt_files = os.listdir(vt_dir)
-    vt_files.remove(os.path.basename(utils.cltools_dir))
+    vt_files.remove(os.path.basename(reprozip.utils.cltools_dir))
     
-    wrapper_dir = os.path.join(vt_dir, os.path.basename(utils.cltools_dir))
+    wrapper_dir = os.path.join(vt_dir, os.path.basename(reprozip.utils.cltools_dir))
     wrappers = os.listdir(wrapper_dir)
     
-    script_file = os.path.join(exp_dir, os.path.basename(utils.exec_path))
+    script_file = os.path.join(exp_dir, os.path.basename(reprozip.utils.exec_path))
     f = open(script_file, 'r')
     contents = f.read()
     f.close()
     
     # replacing user directory
-    contents = contents.replace(utils.user_dir_var,
+    contents = contents.replace(reprozip.utils.user_dir_var,
                                 os.path.normpath(wdir))
     
     f = open(script_file, 'w')
@@ -162,7 +142,7 @@ if __name__ == '__main__':
             f.close()
             
             # replacing user directory
-            contents = contents.replace(utils.user_dir_var,
+            contents = contents.replace(reprozip.utils.user_dir_var,
                                         os.path.normpath(wdir))
             
             f = open(file_path, 'w')
@@ -181,7 +161,7 @@ if __name__ == '__main__':
             f.close()
             
             # replacing user directory
-            contents = contents.replace(utils.user_dir_var,
+            contents = contents.replace(reprozip.utils.user_dir_var,
                                         os.path.normpath(wdir))
             
             f = open(wrapper_file, 'w')
@@ -214,7 +194,7 @@ if __name__ == '__main__':
             print '          Wrappers are inside the package, and you may copy them manually'
         
     # copying files and dependencies, if inside the copy directory
-    cp_dir = os.path.join(exp_dir, os.path.basename(utils.cp_dir))
+    cp_dir = os.path.join(exp_dir, os.path.basename(reprozip.utils.cp_dir))
     
     cp_files = []
     if os.path.exists(cp_dir):
@@ -223,7 +203,7 @@ if __name__ == '__main__':
             cp_files[i] = os.path.join(cp_dir, cp_files[i])
 
     for element in cp_files:
-        path = os.sep.join(os.path.basename(element).split(utils.sep))
+        path = os.sep.join(os.path.basename(element).split(reprozip.utils.sep))
         
         # checking if file already exists
         if os.path.exists(path):
@@ -260,7 +240,7 @@ if __name__ == '__main__':
     # getting the mapping
     symlink_chain = {}
     symlink_dir = {}
-    mapping_file = os.path.join(exp_dir, os.path.basename(utils.symlink_path))
+    mapping_file = os.path.join(exp_dir, os.path.basename(reprozip.utils.symlink_path))
     try:
         f = open(mapping_file, 'r')
         [symlink_chain, symlink_dir] = pickle.load(f)
@@ -276,8 +256,8 @@ if __name__ == '__main__':
             dir_chain = symlink_dir[_symlink]
             for i in range(len(dir_chain)-1, 0, -1):
                 if dir_chain[i-1] and dir_chain[i]:
-                    symlink = os.path.normpath(dir_chain[i-1].replace(utils.user_dir_var, wdir))
-                    target = os.path.normpath(dir_chain[i].replace(utils.user_dir_var, wdir))
+                    symlink = os.path.normpath(dir_chain[i-1].replace(reprozip.utils.user_dir_var, wdir))
+                    target = os.path.normpath(dir_chain[i].replace(reprozip.utils.user_dir_var, wdir))
                 
                     if os.path.exists(symlink):
                         os.remove(symlink)
@@ -288,8 +268,8 @@ if __name__ == '__main__':
         chain = symlink_chain[_symlink]
         for i in range(len(chain)-1, 0, -1):
             if chain[i-1] and chain[i]:
-                symlink = chain[i-1].replace(utils.user_dir_var, os.path.normpath(wdir))
-                target = chain[i].replace(utils.user_dir_var, os.path.normpath(wdir))
+                symlink = chain[i-1].replace(reprozip.utils.user_dir_var, os.path.normpath(wdir))
+                target = chain[i].replace(reprozip.utils.user_dir_var, os.path.normpath(wdir))
             
                 if os.path.exists(symlink):
                     os.remove(symlink)

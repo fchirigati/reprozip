@@ -1,0 +1,5 @@
+include *.txt
+recursive-include reprozip *.txt
+recursive-include reprozip *.stp
+recursive-include reprozip *.d
+recursive-include reprozip/steps *

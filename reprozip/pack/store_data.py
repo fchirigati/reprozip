@@ -31,8 +31,8 @@ import os
 import sys
 import datetime
 
-from SystemTap import Process, parse_raw_pass_lite_line
-from utils import *
+from reprozip.pack.system_tap import Process, parse_raw_pass_lite_line
+from reprozip.utils import *
 
 from pymongo import Connection, ASCENDING
 

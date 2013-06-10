@@ -32,4 +32,6 @@
 ##
 ###############################################################################
 
-from parse_stap_out import Process, parse_raw_pass_lite_line
+import reprozip.pack.pack
+import reprozip.pack.store_data
+import reprozip.pack.tracer
