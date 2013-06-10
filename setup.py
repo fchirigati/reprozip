@@ -1,9 +1,10 @@
 from setuptools import setup, find_packages
-from reprozip.utils import VERSION
+
+version = '0.1.0-beta'
 
 setup(
       name = 'reprozip',
-      version = VERSION,
+      version = version,
       author = 'Fernando Chirigati',
       author_email = 'fchirigati@nyu.edu',
       packages = find_packages(),
@@ -14,6 +15,11 @@ setup(
       install_requires = [
                           'pymongo >= 2.5.2'
                           ],
+      entry_points = {
+                      'console_scripts': [
+                                          'reprozip = reprozip:run'
+                                          ]
+                      },
       classifiers = [
                      'Development Status :: 4 - Beta',
                      'Environment :: Console',

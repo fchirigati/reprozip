@@ -35,7 +35,7 @@
 import reprozip.utils
 import argparse
 
-if __name__ == '__main__':
+def run():
     
     description = 'a tool to make reproducible experiments'
     
