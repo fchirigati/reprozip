@@ -6,6 +6,8 @@ Ubuntu 9.10 and higher
   
   . sudo apt-get install systemtap
 
+  . sudo apt-get install linux-headers-generic gcc libcap-dev
+
   . sudo apt-get install pkg-create-dbgsym
   . create file /etc/apt/sources.list.d/ddebs.list
   . include ddebs repository in /etc/apt/sources.list.d/ddebs.list

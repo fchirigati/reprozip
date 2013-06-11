@@ -35,6 +35,8 @@
 import reprozip.utils
 import reprozip.debug
 import platform
+import subprocess
+import sys
 
 def execute_install_cmd(cmd):
     """
