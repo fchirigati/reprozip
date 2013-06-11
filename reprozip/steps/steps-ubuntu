@@ -1,20 +1,18 @@
-Ubuntu 12.04 (64 bit)
+Ubuntu 9.10 and higher
 
 - Install SystemTap
-  (you can follow http://sourceware.org/systemtap/wiki/SystemtapOnUbuntu)
-  (there is also https://lists.ubuntu.com/archives/ubuntu-users/2010-October/229714.html)
+  (see http://sourceware.org/systemtap/wiki/SystemtapOnUbuntu)
+  (see https://lists.ubuntu.com/archives/ubuntu-users/2010-October/229714.html)
   
   . sudo apt-get install systemtap
 
   . sudo apt-get install pkg-create-dbgsym
-  . Install synaptic: sudo apt-get install synaptic
-  . Include ddebs repository in synaptic
-    . Synaptic --> Settings --> Repositories --> Other software --> Add
-      "deb http://ddebs.ubuntu.com/ precise main restricted universe multiverse"
-      "deb http://ddebs.ubuntu.com $(lsb_release -cs)-updates main restricted universe multiverse"
-      "deb http://ddebs.ubuntu.com $(lsb_release -cs)-security main restricted universe multiverse"
-      "deb http://ddebs.ubuntu.com $(lsb_release -cs)-proposed main restricted universe multiverse"
-    . Disable the options of Source Code
+  . create file /etc/apt/sources.list.d/ddebs.list
+  . include ddebs repository in /etc/apt/sources.list.d/ddebs.list
+    "deb http://ddebs.ubuntu.com $(lsb_release -cs) main restricted universe multiverse"
+    "deb http://ddebs.ubuntu.com $(lsb_release -cs)-updates main restricted universe multiverse"
+    "deb http://ddebs.ubuntu.com $(lsb_release -cs)-security main restricted universe multiverse"
+    "deb http://ddebs.ubuntu.com $(lsb_release -cs)-proposed main restricted universe multiverse"
   . sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys ECDCAD72428D7C01
   . sudo apt-get update
   . sudo apt-get install linux-image-$(uname -r)-dbgsym
@@ -37,8 +35,8 @@ Ubuntu 12.04 (64 bit)
     . log out and then log in
 
   . now, it should be installed! Try the following scripts:
-    stap -ve 'probe begin { log("hello world") exit () }'
-    stap -c df -e 'probe syscall.* { if (target()==pid()) log(name." ".argstr) }'
+    sudo stap -ve 'probe begin { log("hello world") exit () }'
+    sudo stap -v -e 'probe vfs.read {printf("read performed\n"); exit()}'
 
 
 - Create log directory
