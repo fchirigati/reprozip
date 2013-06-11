@@ -70,7 +70,6 @@ ld_library_path = '$LD_LIBRARY_PATH$'
 pythonpath = '$PYTHONPATH$'
 path = '$PATH$'
 
-# tries to find an executable in PATH
 def executable_in_path(executable):
     """
     Checks if executable is in PATH.

@@ -36,6 +36,24 @@ import reprozip.utils
 import reprozip.debug
 import platform
 
+def execute_install_cmd(cmd):
+    """
+    Execute a command line for installation.
+    """
+    
+    try:
+        p = subprocess.Popen(cmd.split())
+    except:
+        reprozip.debug.error('Could not execute "%s": %s' %(cmd,sys.exc_info()[1]))
+        return False
+    
+    returncode = p.wait()
+    if (returncode != 0):
+        reprozip.debug.error('Error while executing "%s".' %cmd)
+        return False
+    
+    return True
+
 def guess_os():
     """
     Returns the OS.
@@ -65,6 +83,8 @@ def guess_linux_distro():
     for d in linux_distros:
         if d == distro:
             return d
+    
+    return distro
         
 def guess_sudo():
     """

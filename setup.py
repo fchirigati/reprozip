@@ -17,7 +17,8 @@ setup(
                           ],
       entry_points = {
                       'console_scripts': [
-                                          'reprozip = reprozip:run'
+                                          'reprozip = reprozip:run',
+                                          'reprozip-dep = reprozip.install.dependencies:install_dependencies'
                                           ]
                       },
       classifiers = [

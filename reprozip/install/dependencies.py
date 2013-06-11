@@ -34,3 +34,51 @@
 
 import reprozip.install.utils
 import reprozip.install.ubuntu
+import reprozip.debug
+import sys
+
+def install_dependencies():
+    """
+    Function used to install the necessary dependencies for using the packing
+    features of ReproZip.
+    Dependencies are SystemTap and MongoDB.
+    """
+    
+    os_ = reprozip.install.utils.guess_os()
+    
+    if os_ == 'linux':
+        distro = reprozip.install.utils.guess_linux_distro()
+        
+        # Ubuntu
+        if distro == 'ubuntu':
+            
+            msg = 'This script will try to install both SystemTap and MongoDB. '
+            msg += 'SystemTap also requires the kernel debug package, which may be '
+            msg += 'big (1.5Gbytes). Do you wish to continue? (Y/N)'
+            reprozip.debug.warning(msg)
+            
+            answer = ''
+            while answer.upper() != 'Y' and answer.upper() != 'N':
+                answer = raw_input('> ')
+                if answer.upper() == 'N':
+                    sys.exit(0)
+                elif answer.upper() == 'Y':
+                    break
+            
+            # SystemTap
+            stap = reprozip.install.ubuntu.install_stap()
+            if not stap:
+                reprozip.debug.warning('SystemTap is not successfully installed.')
+                
+            # MongoDB
+            mongodb = reprozip.install.ubuntu.install_mongodb()
+        
+        elif distro == 'fedora':
+            
+            pass
+        
+        else:
+            reprozip.debug.warning('%s currently not supported for automatically installing the dependencies.' %distro)
+    else:
+        reprozip.debug.warning('%s currently not supported.' %os_)
+    
