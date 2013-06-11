@@ -66,9 +66,12 @@ def install_dependencies():
                     break
             
             # SystemTap
+            reprozip.debug.success('Checking and installing SystemTap...')
             stap = reprozip.install.ubuntu.install_stap()
             if not stap:
                 reprozip.debug.warning('SystemTap is not successfully installed.')
+            else:
+                reprozip.debug.success('SystemTap successfully installed!')
                 
             # MongoDB
             mongodb = reprozip.install.ubuntu.install_mongodb()

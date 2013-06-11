@@ -45,3 +45,11 @@ def warning(message):
     """
     
     print '<warning> %s' %message
+    
+def success(message):
+    """
+    Prints a success message.
+    """
+    
+    print '\n*** %s ***\n' %message
+    
