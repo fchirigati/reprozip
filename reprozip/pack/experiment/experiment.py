@@ -35,6 +35,8 @@
 from reprozip.pack.vt_workflow.workflow import VTWorkflow
 from reprozip.pack.vt_workflow.cltools_wrapper import Wrapper
 from reprozip.pack.tree.provenance_tree import Node, ProvenanceTree
+from reprozip.install.utils import guess_sudo
+import reprozip.debug
 import reprozip.utils
 import shutil
 import stat
@@ -153,8 +155,7 @@ class Experiment:
             p = subprocess.Popen(args, env=env,
                                  cwd=working_dir)
         except:
-            print '<error> Could not execute the command line of the program'
-            print '        %s' %(sys.exc_info()[1])
+            reprozip.debug.error('Could not execute the command line of the program: %s' %sys.exc_info()[1])
             sys.exit(1)
             
 #        (stdout, stderr) = p.communicate()
@@ -170,8 +171,7 @@ class Experiment:
         print '################################################################\n'
         
         if (returncode != 0):
-            print '<error> Error while executing the command line'
-            #print '        stderr: %s' % stderr
+            reprozip.debug.error('Error while executing the command line.')
             sys.exit(1)
         
     
@@ -185,16 +185,14 @@ class Experiment:
         try:
             conn = pymongo.Connection()
         except:
-            print '<error> Could not connect to MongoDB.'
-            print '        %s' %(sys.exc_info()[1])
+            reprozip.debug.error('Could not connect to MongoDB: %s' %sys.exc_info()[1])
             sys.exit(1)
     
         # accessing the database
         try:
             db = conn[db_name]
         except:
-            print '<error> Could not open the database.'
-            print '        %s' %(sys.exc_info()[1])
+            reprozip.debug.error('Could not open the database: %s' %sys.exc_info()[1])
             conn.close()
             sys.exit(1)
     
@@ -202,8 +200,7 @@ class Experiment:
         try:
             collection = db[collection_name]
         except:
-            print '<error> Could not access the collection.'
-            print '        %s' %(sys.exc_info()[1])
+            reprozip.debug.error('Could not access the collection: %s' %sys.exc_info()[1])
             conn.close()
             sys.exit(1)
             
@@ -255,7 +252,7 @@ class Experiment:
                 break
             
         if main_phase_index == None:
-            print '<error> No phases found. This error is probably a bug, as it should not happen.'
+            reprozip.debug.error('No phases found. This error is probably a bug, as it should not happen.')
             conn.close()
             sys.exit(1)
         
@@ -538,8 +535,8 @@ class Experiment:
         """
         
         if not os.path.exists(reprozip.utils.config_path):
-            print '<error> Configuration file not found in %s' % os.path.dirname(reprozip.utils.config_path)
-            print '        Make sure you are in the right directory'
+            reprozip.debug.error('Configuration file not found in %s' % os.path.dirname(reprozip.utils.config_path))
+            reprozip.debug.error('Make sure you are in the right directory.')
             sys.exit(1)
             
         # if configuration file was not modified, do not need to process it
@@ -655,8 +652,7 @@ class Experiment:
                             continue
                         
                         if (element[2].lower() != 'y') and (element[2].lower() != 'n'):
-                            print '<error> Bad configuration file'
-                            print '        value "%s" unrecognized' % element[2]
+                            reprozip.debug.error('Bad configuration file: value "%s" unrecognized' % element[2])
                             sys.exit(1)
                             
                         include = True
@@ -674,8 +670,7 @@ class Experiment:
                                 else:
                                     self.__targets[element[0]] = element[3]
                                 continue
-                            print '<error> Bad configuration file'
-                            print '        file "%s" not found' % element[0]
+                            reprozip.debug.error('Bad configuration file: file "%s" not found' % element[0])
                             sys.exit(1)
                             
                         if not include:
@@ -739,15 +734,13 @@ class Experiment:
             try:
                 shutil.rmtree(self.__rep_dir)
             except:
-                print '<error> Could not remove previous reproducible folder'
-                print '        %s' %(sys.exc_info()[1])
+                reprozip.debug.error('Could not remove previous reproducible folder: %s' %sys.exc_info()[1])
                 sys.exit(1)
                 
         try:
             os.mkdir(self.__rep_dir)
         except:
-            print '<error> Could not create reproducible folder'
-            print '        %s' %(sys.exc_info()[1])
+            reprozip.debug.error('Could not create reproducible folder: %s' %sys.exc_info()[1])
             sys.exit(1)
             
         argv_dict = self.__prov_tree.root.argv_dict
@@ -773,9 +766,8 @@ class Experiment:
                              stat.S_IRGRP | stat.S_IWUSR | stat.S_IWOTH |
                              stat.S_IWGRP)
             except:
-                print '<warning> Could not copy "%s"' % original_file
-                print '          error: %s' % sys.exc_info()[1]
-                print '          The reproducible folder will not contain this file'
+                reprozip.debug.warning('Could not copy "%s": %s' % (original_file, sys.exc_info()[1]))
+                reprozip.debug.warning('Reproducible package will not contain this file.')
                 return (None, in_cp_dir)
             
             # symbolic links
@@ -905,9 +897,8 @@ class Experiment:
             shutil.copyfile(reprozip.utils.config_path, os.path.join(self.__rep_dir,
                                                             os.path.basename(reprozip.utils.config_path)))
         except:
-            print '<warning> Could not copy configuration file'
-            print '          error: %s' % sys.exc_info()[1]
-            print '          The reproducible folder will not contain this file'
+            reprozip.debug.warning('Could not copy configuration file: %s' % sys.exc_info()[1])
+            reprozip.debug.warning('Reproducible package will not contain this file.')
             
         # storing chains of symbolic links in the reproducible directory
         # these chains will be used in the unpacking step
@@ -918,8 +909,7 @@ class Experiment:
                         f, pickle.HIGHEST_PROTOCOL)
             f.close()
         except:
-            print '<error> Could not serialize object structures.'
-            print '        %s' % sys.exc_info()[1]
+            reprozip.debug.error('Could not serialize object structures: %s' % sys.exc_info()[1])
             sys.exit(1)
         
         # environment variables
@@ -931,7 +921,7 @@ class Experiment:
         # ldconfig is executed
         # TODO: is there a better way to do this?
         try:
-            p = subprocess.Popen(['sudo', 'ldconfig', '-v'],
+            p = subprocess.Popen([guess_sudo(), 'ldconfig', '-v'],
                                  stdout=subprocess.PIPE,
                                  stderr=subprocess.PIPE)
             (stdout, stderr) = p.communicate()
@@ -973,9 +963,8 @@ class Experiment:
             ld_library_path = ':'.join(paths)
             
         except:
-            print '<error> Could not execute and use ldconfig command'
-            print '        %s' % sys.exc_info()[1]
-            print '        LD_LIBRARY_PATH will not be set'
+            reprozip.debug.warning('Could not execute and use ldconfig command: %s' % sys.exc_info()[1])
+            reprozip.debug.warning('LD_LIBRARY_PATH will not be set.')
             
         if ld_library_path != '':
             env_var['LD_LIBRARY_PATH'] = ld_library_path
@@ -1136,8 +1125,7 @@ class Experiment:
             f.write(script)
             f.close()
         except:
-            print '<error> Could not create executable script.'
-            print '        %s' % sys.exc_info()[1]
+            reprozip.debug.error('Could not create executable script: %s' % sys.exc_info()[1])
             sys.exit(1)
         
         # generating VisTrails workflow
@@ -1217,9 +1205,8 @@ class Experiment:
         try:
             os.makedirs(wrapper_dir)
         except:
-            print '<error> Could not create CLTools directory.'
-            print '        %s' % sys.exc_info()[1]
-            print '        ReproZip will not create the VisTrails workflow.'
+            reprozip.debug.warning('Could not create CLTools directory: %s' % sys.exc_info()[1])
+            reprozip.debug.warning('ReproZip will not create the VisTrails workflow.')
             return False
             
         wrapper_file = os.path.join(wrapper_dir, main_name + '.clt')
@@ -1228,9 +1215,8 @@ class Experiment:
             f.write(wrapper.get_str())
             f.close()
         except:
-            print '<error> Could not create CLTools wrapper.'
-            print '        %s' % sys.exc_info()[1]
-            print '        ReproZip will not create the VisTrails workflow.'
+            reprozip.debug.warning('Could not create CLTools wrapper: %s' % sys.exc_info()[1])
+            reprozip.debug.warning('ReproZip will not create the VisTrails workflow.')
             return False
             
         # VisTrails workflow
@@ -1580,8 +1566,8 @@ class Experiment:
             f.write(wf.get_str_repr())
             f.close()
         except:
-            print '<error> Could not create VisTrails workflow.'
-            print '        %s' % sys.exc_info()[1]
+            reprozip.debug.warning('Could not create VisTrails workflow: %s' % sys.exc_info()[1])
+            reprozip.debug.warning('ReproZip will not create the VisTrails workflow.')
             return False
         
         return True
@@ -1604,8 +1590,7 @@ class Experiment:
             tar.add(os.path.basename(self.__rep_dir))
             tar.close()
         except:
-            print '<error> Error while packing the files'
-            print '        %s' % sys.exc_info()[1]
+            reprozip.debug.error('Error while packing the files: %s' % sys.exc_info()[1])
             sys.exit(1)
             
         shutil.rmtree(self.__rep_dir)
@@ -1764,8 +1749,7 @@ class Experiment:
             f.write(config_file)
             f.close()
         except:
-            print '<error> Could not save configuration file.'
-            print '        %s' %(sys.exc_info()[1])
+            reprozip.debug.error('Could not save configuration file: %s' %sys.exc_info()[1])
             sys.exit(1)
             
         self.__config_mtime = os.path.getmtime(reprozip.utils.config_path)

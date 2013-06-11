@@ -33,6 +33,7 @@ import datetime
 
 from reprozip.pack.system_tap import Process, parse_raw_pass_lite_line
 from reprozip.utils import *
+import reprozip.debug
 
 from pymongo import Connection, ASCENDING
 
@@ -81,7 +82,7 @@ class Provenance:
         fullpath = os.path.join(self.logdir, self.file)
     
         if not os.path.isfile(fullpath):
-            print '<error> Could not find file %s' %fullpath
+            reprozip.debug.error('Could not find file %s' %fullpath)
             sys.exit(1)
     
         # opening trace file
@@ -91,8 +92,7 @@ class Provenance:
                 entry = parse_raw_pass_lite_line(line.rstrip())      
                 yield entry
             except:
-                print '<error> Could not parse the log file'
-                print '        %s' %sys.exc_info()[1]
+                reprozip.debug.error('Could not parse the log file: %s' %sys.exc_info()[1])      
                 f.close()
                 sys.exit(1)
 

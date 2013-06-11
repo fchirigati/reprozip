@@ -15,6 +15,7 @@ import os
 import sys
 from copy import deepcopy
 
+import reprozip.debug
 from reprozip.utils import *
 
 from pymongo import Connection, ASCENDING

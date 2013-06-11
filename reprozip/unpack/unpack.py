@@ -32,6 +32,7 @@
 ##
 ###############################################################################
 
+import reprozip.debug
 import reprozip.utils
 import argparse
 import tarfile
@@ -58,7 +59,7 @@ def unpack(args):
 #            pass
     
     if not os.path.exists(package):
-        print '<error> The package "%s" does not exist.' % package
+        reprozip.debug.error('The package "%s" does not exist.' % package)
         sys.exit(1)
     
     # directory for the experiment, already unpacked
@@ -75,8 +76,7 @@ def unpack(args):
         main_name = os.path.normpath(tar.getnames()[0])
         tar.close()
     except:
-        print '<error> Could not open package'
-        print '        %s' % sys.exc_info()[1]
+        reprozip.debug.error('Could not open package: %s' % sys.exc_info()[1])
         sys.exit(1)
             
     exp_dir = os.path.join(wdir, main_name)
@@ -91,8 +91,7 @@ def unpack(args):
         try:
             shutil.rmtree(exp_dir)
         except:
-            print '<error> Could not remove previous experiment'
-            print '        %s' % sys.exc_info()[1]
+            reprozip.debug.error('Could not remove previous experiment: %s' % sys.exc_info()[1])
             sys.exit(1)
     
     # unpacking the file
@@ -101,8 +100,7 @@ def unpack(args):
         tar.extractall()
         tar.close()
     except:
-        print '<error> Could not unpack the experiment'
-        print '        %s' % sys.exc_info()[1]
+        reprozip.debug.error('Could not unpack the experiment: %s' % sys.exc_info()[1])
         sys.exit(1)
         
     home = os.getenv('HOME')
@@ -149,8 +147,7 @@ def unpack(args):
             f.write(contents)
             f.close()
         except:
-            print '<error> Error while replacing the directory info'
-            print '        %s' % sys.exc_info()[1]
+            reprozip.debug.error('Error while replacing the directory info: %s' % sys.exc_info()[1])
             sys.exit(1)
                 
     try:
@@ -168,8 +165,7 @@ def unpack(args):
             f.write(contents)
             f.close()
     except:
-        print '<error> Error while replacing the directory info'
-        print '        %s' % sys.exc_info()[1]
+        reprozip.debug.error('Error while replacing the directory info: %s' % sys.exc_info()[1])
         sys.exit(1)
     
     # putting the CLTools wrappers in the VisTrails directory
@@ -178,9 +174,8 @@ def unpack(args):
         try:
             os.mkdir(cltools_dir)
         except:
-            print '<warning> Error while creating CLTools directory for VisTrails'
-            print '          %s' % sys.exc_info()[1]
-            print '          Wrappers are inside the package, and you may copy them manually'
+            reprozip.debug.warning('Error while creating CLTools directory for VisTrails: %s' % sys.exc_info()[1])
+            reprozip.debug.warning('Wrappers are inside the package, and you may copy them manually.')
 
     if os.path.exists(cltools_dir):
         try:
@@ -189,9 +184,8 @@ def unpack(args):
                 n_wrapper_file = os.path.join(cltools_dir, wrapper)
                 shutil.copyfile(wrapper_file, n_wrapper_file)
         except:
-            print '<warning> Error while copying wrappers to VisTrails'
-            print '          %s' % sys.exc_info()[1]
-            print '          Wrappers are inside the package, and you may copy them manually'
+            reprozip.debug.warning('Error while copying wrappers to VisTrails: %s' % sys.exc_info()[1])
+            reprozip.debug.warning('Wrappers are inside the package, and you may copy them manually')
         
     # copying files and dependencies, if inside the copy directory
     cp_dir = os.path.join(exp_dir, os.path.basename(reprozip.utils.cp_dir))
@@ -220,8 +214,7 @@ def unpack(args):
             try:
                 os.makedirs(os.path.dirname(path))
             except:
-                print '<warning> Could not create directory "%s"' % os.path.dirname(path)
-                print '          %s' % sys.exc_info()[1]
+                reprozip.debug.warning('Could not create directory "%s": %s' %(os.path.dirname(path), sys.exc_info()[1]))
                 continue
         
         # copying file
@@ -231,8 +224,7 @@ def unpack(args):
             #os.remove(element)
             print '--------> File "%s" copied with success!' % path
         except:
-            print '<warning> Could not copy file "%s"' % os.path.basename(path)
-            print '          %s' % sys.exc_info()[1]
+            reprozip.debug.warning('Could not copy file "%s": %s' %(os.path.basename(path),sys.exc_info()[1]))
             continue
         
     # symbolic links
@@ -246,8 +238,7 @@ def unpack(args):
         [symlink_chain, symlink_dir] = pickle.load(f)
         f.close()
     except:
-        print '<error> Could not de-serialize object structures'
-        print '        %s' % sys.exc_info()[1]
+        reprozip.debug.error('Could not de-serialize object structures: %s' % sys.exc_info()[1])
         sys.exit(1)
         
     # creating the symbolic links

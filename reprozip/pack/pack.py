@@ -34,6 +34,8 @@
 
 from reprozip.pack.experiment.experiment import Experiment
 from reprozip.pack.tracer import Tracer
+from reprozip.install.utils import guess_os
+import reprozip.debug
 import reprozip.utils
 import inspect
 import pickle
@@ -43,22 +45,23 @@ import os
 
 
 def pack(args):
-    
     # Tracer information
     
     # TODO: change log dir to /opt/log
     LOG_BASEDIR = os.path.join(os.getenv('HOME'), 'log')
 
     current_file = os.path.abspath(inspect.getfile(inspect.currentframe()))
+    os_ = guess_os()
 
-    if sys.platform.startswith('darwin'):
+    if os_ == 'darwin':
         PASS_LITE = os.path.normpath(os.path.join(os.path.dirname(current_file),
                                                   'dtrace/pass-lite-mac.d'))
-    elif sys.platform.startswith('linux'):
+    elif os_ == 'linux':
         PASS_LITE = os.path.normpath(os.path.join(os.path.dirname(current_file),
                                                   'system_tap/pass-lite.stp'))
     else:
-        print '<error> Sorry, platform %s not supported.' % sys.platform
+        msg = 'Sorry, platform %s not supported.' % os_
+        reprozip.debug.error(msg)
         sys.exit(0)
 
     
@@ -95,8 +98,7 @@ def pack(args):
             pickle.dump(rep_experiment, f, pickle.HIGHEST_PROTOCOL)
             f.close()
         except:
-            print '<error> Could not serialize object structures.'
-            print '        %s' % sys.exc_info()[1]
+            reprozip.debug.error('Could not serialize object structures: %s' % sys.exc_info()[1])
             sys.exit(1)
         
     # generation mode
@@ -107,8 +109,7 @@ def pack(args):
             rep_experiment = pickle.load(f)
             f.close()
         except:
-            print '<error> Could not de-serialize object structures'
-            print '        %s' % sys.exc_info()[1]
+            reprozip.debug.error('Could not de-serialize object structures: %s' % sys.exc_info()[1])      
             sys.exit(1)
             
         rep_experiment.verbose = args['verbose']

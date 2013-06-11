@@ -32,6 +32,7 @@
 ##
 ###############################################################################
 
+import reprozip.debug
 import reprozip.utils
 import subprocess
 import sys
@@ -215,17 +216,9 @@ class Node:
                 else:
                     # program is in PATH
                     # need to find where it is located
-                    try:
-                        p = subprocess.Popen(['which', self.__program],
-                                             stdout=subprocess.PIPE,
-                                             stderr=subprocess.PIPE)
-                        (stdout, stderr) = p.communicate()
-                    except:
-                        print '<error> Error while finding out the location of program %s' % self.__program
-                        print '        %s' % sys.exc_info()[1]
-                        sys.exit(1)
-                    if stdout != '':
-                        self.__program = stdout.split()[0]
+                    (in_path, filename) = reprozip.utils.executable_in_path(self.__program)
+                    if in_path:
+                        self.__program = filename
                         self.__argv_dict[0]['value'] = self.__program
                         
             # checking if program is a symbolic link
@@ -488,12 +481,12 @@ class ProvenanceTree:
         """
         
         if not self.__nodes.get(0):
-            print '<error> There is not a root in the tree.'
+            reprozip.debug.error('There is not a root in the provenance tree.')
             sys.exit(1)
             
         nodes = self.__nodes.keys()
         if node.parent_node not in nodes:
-            print '<error> The tree does not contain the parent node.'
+            reprozip.debug.error('The provenance tree does not contain the parent node.')
             sys.exit(1)
     
         # information about the node

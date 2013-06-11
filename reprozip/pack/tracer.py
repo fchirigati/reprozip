@@ -34,6 +34,8 @@
 
 from reprozip.utils import get_ms_since_epoch
 from reprozip.pack.store_data import Provenance
+from reprozip.install.utils import guess_sudo, guess_os
+import reprozip.debug
 import subprocess
 import time
 import sys
@@ -95,25 +97,24 @@ class Tracer:
         
         command_line = ''
         
-        if sys.platform.startswith('linux'):
+        if guess_os() == 'linux':
 #            command_line = 'killall stap'
-            command_line = 'sudo killall stap'
+            command_line = guess_sudo() + ' killall stap'
             
             try:
                 p = subprocess.Popen(command_line.split(),
                                      stdout=subprocess.PIPE,
                                      stderr=subprocess.PIPE)
             except:
-                print '<error> Could not kill previous processes.'
-                print '        %s' %(sys.exc_info()[1])
+                reprozip.debug.error('Could not kill previous processes: %s' %sys.exc_info()[1])  
                 sys.exit(1)
             
             (stdout, stderr) = p.communicate()
              
 #            command_line = 'stap -o %s/pass-lite.out -S 10 %s' % (self.__session_name_path,
 #                                                                  self.__pass_lite)
-            command_line = 'sudo stap -o %s/pass-lite.out %s' % (self.__session_name_path,
-                                                                       self.__pass_lite)
+            command_line = guess_sudo() + ' stap -o %s/pass-lite.out %s' % (self.__session_name_path,
+                                                                            self.__pass_lite)
             
             try:
                 self.__p_tracer = subprocess.Popen(command_line.split(),
@@ -121,29 +122,27 @@ class Tracer:
                                                    stderr=subprocess.PIPE)
                 print 'Tracer pid:', self.__p_tracer.pid
             except:
-                print '<error> Could not run stap.'
-                print '        %s' %(sys.exc_info()[1])
+                reprozip.debug.error('Could not run stap: %s' %sys.exc_info()[1]) 
                 sys.exit(1)
                 
-        else:
+        elif guess_os() == 'darwin':
 #            command_line = 'killall dtrace'
-            command_line = 'sudo killall dtrace'
+            command_line = guess_sudo() + ' killall dtrace'
             
             try:
                 p = subprocess.Popen(command_line.split(),
                                      stdout=subprocess.PIPE,
                                      stderr=subprocess.PIPE)
             except:
-                print '<error> Could not kill previous processes.'
-                print '        %s' %(sys.exc_info()[1])
+                reprozip.debug.error('Could not kill previous processes: %s' %sys.exc_info()[1])
                 sys.exit(1)
             
             (stdout, stderr) = p.communicate()
              
 #            command_line = 'dtrace -b 10m -o %s/pass-lite.out.0 -s %s' % (self.__session_name_path,
 #                                                                          self.__pass_lite)
-            command_line = 'sudo dtrace -b 10m -o %s/pass-lite.out.0 -s %s' % (self.__session_name_path,
-                                                                               self.__pass_lite)
+            command_line = guess_sudo() + ' dtrace -b 10m -o %s/pass-lite.out.0 -s %s' % (self.__session_name_path,
+                                                                                          self.__pass_lite)
             
             try:
                 self.__p_tracer = subprocess.Popen(command_line.split(),
@@ -151,8 +150,7 @@ class Tracer:
                                                    stderr=subprocess.PIPE)
                 print 'Tracer pid:', self.__p_tracer.pid
             except:
-                print '<error> Could not run dtrace.'
-                print '        %s' %(sys.exc_info()[1])
+                reprozip.debug.error('Could not run dtrace: %s' %sys.exc_info()[1])  
                 sys.exit(1)
         
         # give it some time to begin
@@ -167,8 +165,7 @@ class Tracer:
         time.sleep(5)
         
         if (self.__p_tracer == None):
-            print '<error> Could not stop tracer.'
-            print '        Tracer process not found.'
+            reprozip.debug.error('Could not stop tracer. Tracer process not found.')
         else:
 #            os.system('kill %d' %self.__p_tracer.pid)
-            os.system('sudo kill %d' %self.__p_tracer.pid)
+            os.system(guess_sudo() + ' kill %d' %self.__p_tracer.pid)

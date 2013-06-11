@@ -35,6 +35,7 @@
 import time
 import json
 import datetime
+import subprocess
 import os
 
 VERSION = '0.1.0-beta'
@@ -68,6 +69,22 @@ sep_env = '&&=&&'
 ld_library_path = '$LD_LIBRARY_PATH$'
 pythonpath = '$PYTHONPATH$'
 path = '$PATH$'
+
+# tries to find an executable in PATH
+def executable_in_path(executable):
+    """
+    Checks if executable is in PATH.
+    """
+    
+    p = subprocess.Popen(['which', executable],
+                         stdout=subprocess.PIPE,
+                         stderr=subprocess.PIPE)
+    (stdout, stderr) = p.communicate()
+    
+    if stdout == '':
+        return (False, None)
+    else:
+        return (True, stdout.split()[0])
 
 ###############################################################################
 # This part of the code came from Burrito System

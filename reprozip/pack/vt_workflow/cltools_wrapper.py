@@ -32,6 +32,7 @@
 ##
 ###############################################################################
 
+import reprozip.debug
 import json
 import sys
 import os
@@ -129,8 +130,7 @@ class Wrapper:
             try:
                 os.mkdir(cltools_dir)
             except:
-                print '<error> Could not create CLTools folder.'
-                print '        %s' %(sys.exc_info()[0])
+                reprozip.debug.error('Could not create CLTools folder: %s' %sys.exc_info()[0])
                 sys.exit(1)
         
         wrapper = os.path.join(cltools_dir, name + '.clt')
@@ -139,6 +139,5 @@ class Wrapper:
             f.write(json.dumps(self.__wrapper))
             f.close()
         except:
-            print '<error> Could not create CLTools wrapper.'
-            print '        %s' %(sys.exc_info()[0])
+            reprozip.debug.error('Could not create CLTools wrapper: %s' %sys.exc_info()[0])
             sys.exit(1)

@@ -32,6 +32,7 @@
 ##
 ###############################################################################
 
+import reprozip.debug
 import reprozip.utils
 import argparse
 
