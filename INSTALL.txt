@@ -1,0 +1,88 @@
+
+ReproZip currently supports Linux distributions.
+
+If you want to use ReproZip to pack experiments (packing step), your
+Linux distribution must be supported by SystemTap and MongoDB, which are the
+packages used for the packing step.
+If you want to use ReproZip to unpack a reproducible package,
+you do not need to have SystemTap and MongoDB.
+
+How to install ReproZip:
+1) Download the latest version at https://pypi.python.org/pypi/reprozip
+2) After extracting the package, use the following command (you may need root
+   privileges):
+   
+   python setup.py install
+
+3) If you want to use ReproZip to pack experiments, you also need to install
+   both SystemTap and MongoDB.
+   For Ubuntu 9.10 or higher, ReproZip has a script that tries to automatically
+   install these dependencies. Just use the following command:
+   
+   reprozip-dep
+   
+   If you're not using Ubuntu 9.10 or higher, please run the script anyway so
+   the log directories and the configuration file can be correctly created.
+   
+   Automatic installation of dependencies for other distributions is coming.
+   Please, send an email to fchirigati@nyu.edu if you want to have an automatic
+   installation feature for your favorite Linux distribution in the future, so
+   we can put it in our TO-DO list :)
+   
+********************************************************************************
+ 
+Manually installing the dependencies on Ubuntu 9.10 or higher:
+--------------------------------------------------------------
+ 
+- Install SystemTap
+  
+  . sudo apt-get install systemtap
+  
+  . sudo apt-get install linux-headers-generic gcc libcap-dev
+  
+  . sudo apt-get install pkg-create-dbgsym
+  
+  . create file /etc/apt/sources.list.d/ddebs.list
+  
+  . include the following lines in /etc/apt/sources.list.d/ddebs.list
+  
+    deb http://ddebs.ubuntu.com $(lsb_release -cs) main restricted universe multiverse
+    deb http://ddebs.ubuntu.com $(lsb_release -cs)-updates main restricted universe multiverse
+    deb http://ddebs.ubuntu.com $(lsb_release -cs)-security main restricted universe multiverse
+    deb http://ddebs.ubuntu.com $(lsb_release -cs)-proposed main restricted universe multiverse
+    
+  . sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys ECDCAD72428D7C01
+  
+  . sudo apt-get update
+  
+  . sudo apt-get install linux-image-$(uname -r)-dbgsym
+
+  . Now, it should be installed! Try the following scripts:
+  
+    sudo stap -ve 'probe begin { log("hello world") exit () }'
+    sudo stap -v -e 'probe vfs.read {printf("read performed\n"); exit()}'
+    
+  . For more information on how to install SystemTap on Ubuntu, please refer to
+    the following links:
+    
+    http://sourceware.org/systemtap/wiki/SystemtapOnUbuntu
+    https://lists.ubuntu.com/archives/ubuntu-users/2010-October/229714.html
+
+
+- Create log directory
+
+  . sudo mkdir /opt/reprozip
+
+
+- Install MongoDB
+
+  . Follow instructions at the official website:
+  
+    http://docs.mongodb.org/manual/tutorial/install-mongodb-on-ubuntu/#install-mongodb
+
+  . create the database directory
+  
+    . mkdir /opt/reprozip/mongodb
+
+********************************************************************************
+
