@@ -32,10 +32,42 @@
 ##
 ###############################################################################
 
+from reprozip.pack.config_parser import Parser
 import reprozip.install.utils
 import reprozip.install.ubuntu
+import reprozip.install.fedora
 import reprozip.debug
+import platform
 import sys
+import os
+
+def create_dir():
+    """
+    Creates the directories for logging.
+    """
+    
+    sudo = reprozip.install.utils.guess_sudo()
+    val = True
+    
+    def check_val(val):
+        if not val:
+            return False
+    
+    # log dir
+    log_dir = reprozip.install.utils.log_basedir()
+    if not os.path.exists(log_dir):
+        cmd = sudo + ' mkdir ' + log_dir
+        val = reprozip.install.utils.execute_install_cmd(cmd)
+        check_val(val)
+        
+    # database dir
+    db_dir = reprozip.install.utils.mongodb_dbpath
+    if not os.path.exists(db_dir):
+        cmd = sudo + ' mkdir ' + db_dir
+        val = reprozip.install.utils.execute_install_cmd(cmd)
+        check_val(val)
+        
+    return True
 
 def install_dependencies():
     """
@@ -48,40 +80,66 @@ def install_dependencies():
     
     if os_ == 'linux':
         distro = reprozip.install.utils.guess_linux_distro()
+        dep = None
+        
+        # log directory
+        rep_dir = create_dir()
+        if not rep_dir:
+            reprozip.debug.warning('Creation of log directory failed!')
+            
+        # configuration file
+        config = Parser()
+        config.create_config_file()
         
         # Ubuntu
         if distro == 'ubuntu':
-            
-            msg = 'This script will try to install both SystemTap and MongoDB. '
-            msg += 'SystemTap also requires the kernel debug package, which may be '
-            msg += 'big (1.5Gbytes). Do you wish to continue? (Y/N)'
-            reprozip.debug.warning(msg)
-            
-            answer = ''
-            while answer.upper() != 'Y' and answer.upper() != 'N':
-                answer = raw_input('> ')
-                if answer.upper() == 'N':
-                    sys.exit(0)
-                elif answer.upper() == 'Y':
-                    break
-            
-            # SystemTap
-            reprozip.debug.success('Checking and installing SystemTap...')
-            stap = reprozip.install.ubuntu.install_stap()
-            if not stap:
-                reprozip.debug.warning('SystemTap is not successfully installed.')
-            else:
-                reprozip.debug.success('SystemTap successfully installed!')
-                
-            # MongoDB
-            mongodb = reprozip.install.ubuntu.install_mongodb()
+            dep = reprozip.install.ubuntu
         
+        # Fedora
         elif distro == 'fedora':
-            
-            pass
+            dep = reprozip.install.fedora
         
         else:
             reprozip.debug.warning('%s currently not supported for automatically installing the dependencies.' %distro)
+            sys.exit(0)
+        
+        msg = 'The following packages will be installed:\n'
+        msg += '  1) systemtap\n'
+        msg += '  2) pkg-create-dbgsym\n'
+        msg += '  3) linux-headers-generic\n'
+        msg += '  4) gcc\n'
+        msg += '  5) libcap-dev\n'
+        msg += '  6) linux-image-' + platform.uname()[2] + '-dbgsym\n'
+        msg += '  7) mongodb-10gen\n'
+        
+        msg += 'Packages 3, 5 and 6 may be upgraded in case they are already installed.\n'
+        msg += 'Do you wish to continue? (Y/N)'
+        reprozip.debug.warning(msg)
+        
+        answer = ''
+        while answer.upper() != 'Y' and answer.upper() != 'N':
+            answer = raw_input('> ')
+            if answer.upper() == 'N':
+                sys.exit(0)
+            elif answer.upper() == 'Y':
+                break
+        
+        # SystemTap
+        reprozip.debug.success('Checking / installing SystemTap...')
+        stap = dep.install_stap()
+        if not stap:
+            reprozip.debug.warning('SystemTap is not successfully installed.')
+        else:
+            reprozip.debug.success('SystemTap: done!')
+            
+        # MongoDB
+        reprozip.debug.success('Checking / installing MongoDB...')
+        mongodb = dep.install_mongodb()
+        if not mongodb:
+            reprozip.debug.warning('MongoDB is not successfully installed.')
+        else:
+            reprozip.debug.success('MongoDB: done!')
+        
     else:
         reprozip.debug.warning('%s currently not supported.' %os_)
     

@@ -45,6 +45,8 @@ ddebs = ['deb http://ddebs.ubuntu.com ' + lsb_release + ' main restricted univer
          'deb http://ddebs.ubuntu.com ' + lsb_release + '-security main restricted universe multiverse',
          'deb http://ddebs.ubuntu.com ' + lsb_release + '-proposed main restricted universe multiverse']
 
+ten_gen = ['deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen']
+
 def test_stap():
     """
     Function used to test SystemTap.
@@ -79,48 +81,57 @@ def install_stap():
     (in_path, filename) = reprozip.utils.executable_in_path('stap')
     if not in_path:
         
-        # getting systemtap package
+        # installing SystemTap
         stap_cmd = sudo + ' apt-get install systemtap'
         val = reprozip.install.utils.execute_install_cmd(stap_cmd)
         check_val(val)
+        
+    (in_path, filename) = reprozip.utils.executable_in_path('pkg_create_dbgsym')
+    if not in_path:
         
         # kernel support
         cmd = sudo + ' apt-get install pkg-create-dbgsym'
         val = reprozip.install.utils.execute_install_cmd(cmd)
         check_val(val)
         
-        # devel environment
-        cmd = sudo + ' apt-get install linux-headers-generic gcc libcap-dev'
+    # devel environment
+    cmd = sudo + ' apt-get install linux-headers-generic libcap-dev'
+    val = reprozip.install.utils.execute_install_cmd(cmd)
+    check_val(val)
+    
+    (in_path, filename) = reprozip.utils.executable_in_path('gcc')
+    if not in_path:
+        
+        # installing gcc
+        cmd = sudo + ' apt-get install gcc'
         val = reprozip.install.utils.execute_install_cmd(cmd)
         check_val(val)
         
-        # including ddebs repositories
-        ddebs_file = '/etc/apt/sources.list.d/ddebs.list'
-        if not os.path.exists(ddebs_file):
-            t = tempfile.NamedTemporaryFile(mode='w', delete=False)
-            t.write('\n'.join(ddebs))
-            t.close()
-            cmd = sudo + ' cp ' + t.name + ' ' + ddebs_file
-            val = reprozip.install.utils.execute_install_cmd(cmd)
-            check_val(val)
+    # including ddebs repositories
+    ddebs_file = '/etc/apt/sources.list.d/ddebs.list'
+    if not os.path.exists(ddebs_file):
+        t = tempfile.NamedTemporaryFile(mode='w', delete=False)
+        t.write('\n'.join(ddebs))
+        t.close()
+        cmd = sudo + ' cp ' + t.name + ' ' + ddebs_file
+        val = reprozip.install.utils.execute_install_cmd(cmd)
+        check_val(val)
         
-        # importing the debug symbol archive signing key
+        # importing the debug symbol archive GPG key
         cmd = sudo + ' apt-key adv --keyserver keyserver.ubuntu.com --recv-keys ECDCAD72428D7C01'
         val = reprozip.install.utils.execute_install_cmd(cmd)
         check_val(val)
-        
+            
         # updating repository
         cmd = sudo + ' apt-get update'
         val = reprozip.install.utils.execute_install_cmd(cmd)
         check_val(val)
         
-        # installing debug package
-        uname = platform.uname()[2]
-        cmd = sudo + ' apt-get install linux-image-' + uname + '-dbgsym'
-        val = reprozip.install.utils.execute_install_cmd(cmd)
-        check_val(val)
-        
-        return True
+    # installing debug package
+    uname = platform.uname()[2]
+    cmd = sudo + ' apt-get install linux-image-' + uname + '-dbgsym'
+    val = reprozip.install.utils.execute_install_cmd(cmd)
+    check_val(val)
         
     return test_stap()
 
@@ -129,5 +140,41 @@ def install_mongodb():
     Function used to install MongoDB.
     """
     
-    pass
+    sudo = reprozip.install.utils.guess_sudo()
+    val = True
+    
+    def check_val(val):
+        if not val:
+            return False
+        
+    (in_path, filename) = reprozip.utils.executable_in_path('mongod')
+    if not in_path:
+        
+        # including 10gen repository
+        f = '/etc/apt/sources.list.d/10gen.list'
+        if not os.path.exists(f):
+            t = tempfile.NamedTemporaryFile(mode='w', delete=False)
+            t.write('\n'.join(ten_gen))
+            t.close()
+            cmd = sudo + ' cp ' + t.name + ' ' + f
+            val = reprozip.install.utils.execute_install_cmd(cmd)
+            check_val(val)
+        
+        # importing the 10gen GPG key
+        cmd = sudo + ' apt-key adv --keyserver keyserver.ubuntu.com --recv 7F0CEB10'
+        val = reprozip.install.utils.execute_install_cmd(cmd)
+        check_val(val)
+        
+        # updating repository
+        cmd = sudo + ' apt-get update'
+        val = reprozip.install.utils.execute_install_cmd(cmd)
+        check_val(val)
+        
+        # installing MongoDB
+        cmd = sudo + ' apt-get install mongodb-10gen=2.4.4'
+        val = reprozip.install.utils.execute_install_cmd(cmd)
+        check_val(val)
+        
+    return True
+
     

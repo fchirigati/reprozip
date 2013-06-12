@@ -32,6 +32,3 @@
 ##
 ###############################################################################
 
-import reprozip.install.utils
-import reprozip.install.ubuntu
-import reprozip.install.fedora
