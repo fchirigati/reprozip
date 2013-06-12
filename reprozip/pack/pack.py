@@ -33,8 +33,9 @@
 ###############################################################################
 
 from reprozip.pack.experiment.experiment import Experiment
+from reprozip.pack.mongodb import Mongod
 from reprozip.pack.tracer import Tracer
-from reprozip.install.utils import guess_os
+from reprozip.install.utils import guess_os, log_basedir
 import reprozip.debug
 import reprozip.utils
 import inspect
@@ -45,11 +46,8 @@ import os
 
 
 def pack(args):
-    # Tracer information
     
-    # TODO: change log dir to /opt/log
-    LOG_BASEDIR = os.path.join(os.getenv('HOME'), 'log')
-
+    # tracer information
     current_file = os.path.abspath(inspect.getfile(inspect.currentframe()))
     os_ = guess_os()
 
@@ -64,7 +62,6 @@ def pack(args):
         reprozip.debug.error(msg)
         sys.exit(0)
 
-    
     # creating an experiment
     rep_experiment = Experiment()
     
@@ -74,9 +71,13 @@ def pack(args):
         rep_experiment.verbose = args['verbose']
         
         rep_experiment.command_line_info = args['command']
+        
+        # initializing mongod instance
+        mongod = Mongod()
+        mongod.run()
             
         if args['execute']:
-            main_tracer = Tracer(log_basedir = LOG_BASEDIR,
+            main_tracer = Tracer(log_basedir = log_basedir(),
                                  pass_lite   = PASS_LITE)
             
             main_tracer.run_tracer()
@@ -88,6 +89,9 @@ def pack(args):
         # retrieving data
         rep_experiment.retrieve_experiment_data(db_name         = 'reprozip_db',
                                                 collection_name = 'process_trace')
+        
+        # stopping mongod instance
+        mongod.stop()
         
         # configuring
         rep_experiment.configure()

@@ -32,8 +32,53 @@
 ##
 ###############################################################################
 
-import reprozip.pack.pack
-import reprozip.pack.store_data
-import reprozip.pack.tracer
-import reprozip.pack.config_parser
-import reprozip.pack.mongodb
+import reprozip.install.utils
+import ConfigParser
+import os
+
+class Parser:
+    """
+    Class used to handle ReproZip configuration file.
+    Note: this is not the configuration file of a reproducible package.
+    """
+    
+    def __init__(self):
+        """
+        Init method.
+        """
+        
+        self.__file = os.path.join(os.getenv('HOME'), '.reprozip.config')
+        
+    def create_config_file(self):
+        """
+        Method that creates the configuration file.
+        """
+        
+        config = ConfigParser.RawConfigParser()
+        
+        config.add_section('mongodb')
+        config.set('mongodb', 'quiet', reprozip.install.utils.mongodb_quiet)
+        config.set('mongodb', 'logpath', reprozip.install.utils.mongodb_logpath)
+        config.set('mongodb', 'dbpath', reprozip.install.utils.mongodb_dbpath)
+        config.set('mongodb', 'port', reprozip.install.utils.mongodb_port)
+        config.set('mongodb', 'on', reprozip.install.utils.mongodb_on)
+        
+        with open(self.__file, 'wb') as configfile:
+            config.write(configfile)
+            
+    def read_mongodb_config(self):
+        """
+        Reads MongoDB section in the configuration file, returning its parameters in a tuple.
+        """
+        
+        config = ConfigParser.RawConfigParser()
+        config.read(self.__file)
+        
+        on = config.getboolean('mongodb', 'on')
+        port = config.get('mongodb', 'port')
+        dbpath = config.get('mongodb', 'dbpath')
+        logpath = config.get('mongodb', 'logpath')
+        quiet = config.getboolean('mongodb', 'quiet')
+        
+        return (on, port, dbpath, logpath, quiet)
+        
