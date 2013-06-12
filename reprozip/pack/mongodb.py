@@ -86,6 +86,8 @@ class Mongod:
             reprozip.debug.error('Could not run mongod: %s' %sys.exc_info()[1]) 
             sys.exit(1)
             
+        self.__mongodb.wait()
+            
     def stop(self):
         """
         Stops the mongod instance.

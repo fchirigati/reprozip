@@ -70,6 +70,20 @@ ld_library_path = '$LD_LIBRARY_PATH$'
 pythonpath = '$PYTHONPATH$'
 path = '$PATH$'
 
+def log_basedir():
+    """
+    Returns the location of ReproZip log files.
+    """
+    
+    return os.path.join(os.getenv('HOME'), '.reprozip')
+
+# MongoDB defaults
+mongodb_on = 'True'
+mongodb_port = '27020'
+mongodb_dbpath = os.path.join(log_basedir(), 'mongodb')
+mongodb_logpath = os.path.join(mongodb_dbpath, 'mongodb.log')
+mongodb_quiet = 'True'
+
 def executable_in_path(executable):
     """
     Checks if executable is in PATH.

@@ -35,7 +35,7 @@
 from reprozip.pack.experiment.experiment import Experiment
 from reprozip.pack.mongodb import Mongod
 from reprozip.pack.tracer import Tracer
-from reprozip.install.utils import guess_os, log_basedir
+from reprozip.install.utils import guess_os
 import reprozip.debug
 import reprozip.utils
 import inspect
@@ -77,7 +77,7 @@ def pack(args):
         mongod.run()
             
         if args['execute']:
-            main_tracer = Tracer(log_basedir = log_basedir(),
+            main_tracer = Tracer(log_basedir = reprozip.utils.log_basedir(),
                                  pass_lite   = PASS_LITE)
             
             main_tracer.run_tracer()

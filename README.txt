@@ -12,6 +12,8 @@ Limitations:
 
 For installation instructions, please refer to INSTALL.txt.
 
+For more information and to report bugs, contact Fernando Chirigati at fchirigati@nyu.edu
+
 How To Use ReproZip
 ===================
 
@@ -24,7 +26,7 @@ ReproZip uses MongoDB in the packing step to keep information about packed exper
 
 In case you already have MongoDB installed, you may find it useful to change the default settings of the mongod instance that ReproZip initiates at the beginning of the packing step (note that ReproZip kills this instance at the end of its execution), so that it reflects your installation. ReproZip creates its own database to include all the data, so you do not need to worry about it overriding your data.
 
-The default settings can be found at ReproZip's configuration file ("$HOME/.reprozip.config"). The parameters are:
+The default settings can be found at ReproZip's configuration file ("$HOME/.reprozip/config"). The parameters are:
 
 * "on": indicates whether ReproZip should create its own mongod instance; set it to False in case you want to use a mongod instance that is already running;
 * "port": specifies the port for the mongod to listen for client connections;
@@ -32,4 +34,3 @@ The default settings can be found at ReproZip's configuration file ("$HOME/.repr
 * "logpath": specifies a path for the log file;
 * "quiet": indicates whether MongoDB should limit the amount of output; setting it to True keeps the output significantly smaller.
 
-For more information, please contact Fernando Chirigati at fchirigati@nyu.edu

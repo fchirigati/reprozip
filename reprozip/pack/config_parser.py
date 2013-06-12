@@ -32,7 +32,7 @@
 ##
 ###############################################################################
 
-import reprozip.install.utils
+import reprozip.utils
 import ConfigParser
 import os
 
@@ -47,7 +47,7 @@ class Parser:
         Init method.
         """
         
-        self.__file = os.path.join(os.getenv('HOME'), '.reprozip.config')
+        self.__file = os.path.join(reprozip.utils.log_basedir(), 'config')
         
     def create_config_file(self):
         """
@@ -57,11 +57,11 @@ class Parser:
         config = ConfigParser.RawConfigParser()
         
         config.add_section('mongodb')
-        config.set('mongodb', 'quiet', reprozip.install.utils.mongodb_quiet)
-        config.set('mongodb', 'logpath', reprozip.install.utils.mongodb_logpath)
-        config.set('mongodb', 'dbpath', reprozip.install.utils.mongodb_dbpath)
-        config.set('mongodb', 'port', reprozip.install.utils.mongodb_port)
-        config.set('mongodb', 'on', reprozip.install.utils.mongodb_on)
+        config.set('mongodb', 'quiet', reprozip.utils.mongodb_quiet)
+        config.set('mongodb', 'logpath', reprozip.utils.mongodb_logpath)
+        config.set('mongodb', 'dbpath', reprozip.utils.mongodb_dbpath)
+        config.set('mongodb', 'port', reprozip.utils.mongodb_port)
+        config.set('mongodb', 'on', reprozip.utils.mongodb_on)
         
         with open(self.__file, 'wb') as configfile:
             config.write(configfile)

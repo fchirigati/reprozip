@@ -54,16 +54,16 @@ def create_dir():
             return False
     
     # log dir
-    log_dir = reprozip.install.utils.log_basedir()
+    log_dir = reprozip.utils.log_basedir()
     if not os.path.exists(log_dir):
-        cmd = sudo + ' mkdir ' + log_dir
+        cmd = 'mkdir ' + log_dir
         val = reprozip.install.utils.execute_install_cmd(cmd)
         check_val(val)
         
     # database dir
-    db_dir = reprozip.install.utils.mongodb_dbpath
+    db_dir = reprozip.utils.mongodb_dbpath
     if not os.path.exists(db_dir):
-        cmd = sudo + ' mkdir ' + db_dir
+        cmd = 'mkdir ' + db_dir
         val = reprozip.install.utils.execute_install_cmd(cmd)
         check_val(val)
         

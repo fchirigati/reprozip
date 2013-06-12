@@ -120,7 +120,7 @@ class Tracer:
                 self.__p_tracer = subprocess.Popen(command_line.split(),
                                                    stdout=subprocess.PIPE,
                                                    stderr=subprocess.PIPE)
-                print 'Tracer pid:', self.__p_tracer.pid
+                #print 'Tracer pid:', self.__p_tracer.pid
             except:
                 reprozip.debug.error('Could not run stap: %s' %sys.exc_info()[1]) 
                 sys.exit(1)

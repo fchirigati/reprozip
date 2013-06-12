@@ -111,23 +111,4 @@ def guess_sudo():
 #        reprozip.debug.warning("Could not find a graphical su-like command.")
 #        reprozip.debug.warning("Will use regular su.")
 #        return 'su -c'
-
-def log_basedir():
-    """
-    Returns the location of ReproZip log files.
-    """
-    
-    distro = guess_linux_distro()
-    if distro == 'ubuntu':
-        return '/opt/reprozip'
-    else:
-        # for now
-        return '/opt/reprozip'
-
-# MongoDB defaults
-mongodb_on = 'True'
-mongodb_port = '27020'
-mongodb_dbpath = os.path.join(log_basedir(), 'mongodb')
-mongodb_logpath = os.path.join(mongodb_dbpath, 'mongodb.log')
-mongodb_quiet = 'True'
     

@@ -29,6 +29,9 @@ How to install ReproZip:
    installation feature for your favorite Linux distribution in the future, so
    we can put it in our TO-DO list :)
    
+ReproZip is in a beta version, so please, if you have any bugs while installing
+the tool (and dependencies), send an email to fchirigati@nyu.edu
+   
 ********************************************************************************
  
 Manually installing the dependencies on Ubuntu 9.10 or higher:

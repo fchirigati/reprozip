@@ -32,3 +32,16 @@
 ##
 ###############################################################################
 
+def install_stap():
+    """
+    Function used to install SystemTap.
+    """
+    
+    pass
+
+def install_mongodb():
+    """
+    Function used to install MongoDB.
+    """
+    
+    pass
