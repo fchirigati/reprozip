@@ -84,11 +84,12 @@ def pack(args):
             rep_experiment.execute(args['wdir'], args['env'])
             main_tracer.stop_tracer()
             
-            main_tracer.store_process_data()
+            main_tracer.store_process_data(port=mongod.port)
             
         # retrieving data
         rep_experiment.retrieve_experiment_data(db_name         = 'reprozip_db',
-                                                collection_name = 'process_trace')
+                                                collection_name = 'process_trace',
+                                                port            = mongod.port)
         
         # stopping mongod instance
         mongod.stop()

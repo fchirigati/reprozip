@@ -82,12 +82,13 @@ class Tracer:
         os.symlink(self.__session_name, cs)
         
         
-    def store_process_data(self):
+    def store_process_data(self, port):
         """
         Method that stores data in MongoDB.
         """
         self.__provenance.store(self.__session_name_path,
-                                self.__session_name)
+                                self.__session_name,
+                                port)
 
         
     def run_tracer(self):

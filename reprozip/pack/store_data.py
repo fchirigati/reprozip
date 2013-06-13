@@ -35,7 +35,7 @@ from reprozip.pack.system_tap import Process, parse_raw_pass_lite_line
 from reprozip.utils import *
 import reprozip.debug
 
-from pymongo import Connection, ASCENDING
+from pymongo import MongoClient, ASCENDING
 
 class Provenance:
     """
@@ -169,7 +169,7 @@ class Provenance:
                                       'last_updated_time': encode_datetime(get_ms_since_epoch())})
     
     
-    def store(self, logdir, session_tag):
+    def store(self, logdir, session_tag, port):
         """
         Main method that stores the provenance data in MongoDB.
         """
@@ -178,7 +178,7 @@ class Provenance:
         self.session_tag = session_tag
     
         # Setup MongoDB stuff:
-        c = Connection()
+        c = MongoClient(port=int(port))
         db = c.reprozip_db
         
         self.proc_col = db.process_trace

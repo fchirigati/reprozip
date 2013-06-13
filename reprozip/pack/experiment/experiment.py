@@ -175,7 +175,7 @@ class Experiment:
             sys.exit(1)
         
     
-    def retrieve_experiment_data(self, db_name, collection_name):
+    def retrieve_experiment_data(self, db_name, collection_name, port):
         """
         Method used to retrieve the information about the experiment.
         This information is obtained in a MongoDB collection.
@@ -183,7 +183,7 @@ class Experiment:
         
         # connecting to Mongo
         try:
-            conn = pymongo.Connection()
+            conn = pymongo.MongoClient(port=int(port))
         except:
             reprozip.debug.error('Could not connect to MongoDB: %s' %sys.exc_info()[1])
             sys.exit(1)

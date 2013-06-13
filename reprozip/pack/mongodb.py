@@ -61,7 +61,10 @@ class Mongod:
         parser = Parser()
         t = parser.read_mongodb_config()
         (self.__on, self.__port, self.__dbpath, self.__logpath, self.__quiet) = t
-        
+
+    def get_port(self):
+        return self.__port
+
     def run(self):
         """
         Runs a mongod instance.
@@ -90,14 +93,25 @@ class Mongod:
             
     def stop(self):
         """
-        Stops the mongod instance.
+        Tries to stop the mongod instance.
         """
         
         if not self.__on:
             return
         
         if (self.__mongodb == None):
-            reprozip.debug.error('Could not stop mongod. Instance not found.')
+            reprozip.debug.error('mongod instance not found to be stopped.')
         else:
-            os.system(guess_sudo() + ' kill %d' %self.__mongodb.pid)
+            cmd = guess_sudo() + ' mongod --shutdown --dbpath ' + self.__dbpath
+            try:
+                p = subprocess.Popen(cmd.split(),
+                                     stdout=subprocess.PIPE,
+                                     stderr=subprocess.PIPE)
+            except:
+                msg = 'Could not stop mongod: %s. ' %sys.exc_info()[1]
+                msg += 'You may want to try stopping it by running "%s"' %cmd
+                reprozip.debug.warning(msg)
+    
+    port = property(get_port, None, None, None)
+                
     
