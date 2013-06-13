@@ -1083,21 +1083,29 @@ class Experiment:
         # executable script
         script = ''
         
-        script += 'pushd %s\n' %pwd
-        for var in env_var:
-            script += '%s=%s ' %(var, env_var[var])
+        script += 'import os\n'
+        script += 'import subprocess\n\n'
+        
+        script += 'pwd = os.getcwd()\n'
+        script += 'os.chdir(\'%s\')n\n' %pwd
             
+        cmd = ''
         for i in range(0, len(argv_dict), 1):
             if argv_dict[i]['flag']:
-                script += '%s ' %argv_dict[i]['flag']
+                cmd += '%s ' %argv_dict[i]['flag']
             if argv_dict[i]['prefix']:
-                script += '%s' %argv_dict[i]['prefix']
-            script += '%s ' %argv_dict[i]['value']
+                cmd += '%s' %argv_dict[i]['prefix']
+            cmd += '%s ' %argv_dict[i]['value']
             
-        script += '\npopd'
+        script += 'cmd = \"%s\".split()\n' %cmd
+        script += 'env = %s\n' %str(env_var)
+        script += 'p = subprocess.Popen(cmd, env=env)\n'
+        script += 'r = p.wait()\n\n'
+            
+        script += 'os.chdir(pwd)'
             
         script_file = reprozip.utils.exec_path.replace(reprozip.utils.rep_dir_var,
-                                              self.__rep_dir)
+                                                       self.__rep_dir)
         try:
             f = open(script_file, 'w')
             f.write(script)

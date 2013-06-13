@@ -41,6 +41,7 @@ import reprozip.utils
 import inspect
 import pickle
 import argparse
+import time
 import sys
 import os
 
@@ -90,6 +91,9 @@ def pack(args):
                 main_tracer.stop_tracer()
                 mongod.stop()
                 sys.exit(1)
+        else:
+            # give mongod some time to begin
+            time.sleep(3)
             
         # retrieving data
         try:

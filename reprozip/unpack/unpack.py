@@ -122,6 +122,10 @@ def unpack(args):
     contents = contents.replace(reprozip.utils.user_dir_var,
                                 os.path.normpath(wdir))
     
+    # adding python ref
+    ref = '#!%s\n\n' %reprozip.utils.executable_in_path('python')[1]
+    contents = ref + contents
+    
     f = open(script_file, 'w')
     f.write(contents)
     f.close()
