@@ -156,23 +156,15 @@ class Experiment:
                                  cwd=working_dir)
         except:
             reprozip.debug.error('Could not execute the command line of the program: %s' %sys.exc_info()[1])
-            sys.exit(1)
-            
-#        (stdout, stderr) = p.communicate()
+            raise Exception
         
         returncode = p.wait()
-
-#        if stdout != '':
-#            print '%s' % stdout
-#        
-#        if stderr != '':
-#            print '%s' % stderr
         
         print '################################################################\n'
         
         if (returncode != 0):
             reprozip.debug.error('Error while executing the command line.')
-            sys.exit(1)
+            raise Exception
         
     
     def retrieve_experiment_data(self, db_name, collection_name, port):
@@ -186,7 +178,7 @@ class Experiment:
             conn = pymongo.MongoClient(port=int(port))
         except:
             reprozip.debug.error('Could not connect to MongoDB: %s' %sys.exc_info()[1])
-            sys.exit(1)
+            raise Exception
     
         # accessing the database
         try:
@@ -194,7 +186,7 @@ class Experiment:
         except:
             reprozip.debug.error('Could not open the database: %s' %sys.exc_info()[1])
             conn.close()
-            sys.exit(1)
+            raise Exception
     
         # accessing the collection
         try:
@@ -202,7 +194,7 @@ class Experiment:
         except:
             reprozip.debug.error('Could not access the collection: %s' %sys.exc_info()[1])
             conn.close()
-            sys.exit(1)
+            raise Exception
             
         l_args = self.command_line_info.split()
         for i in range(len(l_args)):
@@ -221,7 +213,7 @@ class Experiment:
         if (len_cursor == 0):
             print '** No results found **'
             conn.close()
-            sys.exit(0)
+            raise Exception
         
         exec_wf = cursor[0]
 #        it = 1
@@ -252,9 +244,9 @@ class Experiment:
                 break
             
         if main_phase_index == None:
-            reprozip.debug.error('No phases found. This error is probably a bug, as it should not happen.')
+            reprozip.debug.error('No phases found. This should not happen...')
             conn.close()
-            sys.exit(1)
+            raise Exception
         
         execve_pwd = str(exec_wf['phases'][main_phase_index]['execve_pwd'])
         
@@ -582,19 +574,6 @@ class Experiment:
             exclude_index = config_info.index('[exclude]')
         except:
             exclude_index = None
-            
-#        try:
-#            env_index = config_info.index('[env]')
-#        except:
-#            env_index = None
-#            
-#        categories = ['[main program]',
-#                      '[other programs]',
-#                      '[main input files]',
-#                      '[other input files]',
-#                      '[dependencies]',
-#                      '[exclude]',
-#                      '[env]']
         
         categories = ['[main program]',
                       '[other programs]',
@@ -707,8 +686,7 @@ class Experiment:
         
     def generate_reproducible_experiment(self, name):
         """
-        Method to generate a CLTools wrapper and a VisTrails workflow for the
-        experiment, to make it reproducible.
+        Method to generate a reproducible package for the experiment.
         """
         
         # name of the module / workflow

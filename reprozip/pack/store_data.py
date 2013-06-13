@@ -83,7 +83,7 @@ class Provenance:
     
         if not os.path.isfile(fullpath):
             reprozip.debug.error('Could not find file %s' %fullpath)
-            sys.exit(1)
+            raise Exception
     
         # opening trace file
         f = open(fullpath)
@@ -92,15 +92,12 @@ class Provenance:
                 entry = parse_raw_pass_lite_line(line.rstrip())      
                 yield entry
             except:
-                reprozip.debug.error('Could not parse the log file: %s' %sys.exc_info()[1])      
+                reprozip.debug.error('Could not parse the log file: %s' %sys.exc_info()[1])
                 f.close()
-                sys.exit(1)
+                raise Exception
 
 
     def exit_handler(self):
-        """
-        Runs when the process is killed by civilized means (i.e., not "kill -9")
-        """
         
         cur_time = get_ms_since_epoch()
         self.session_status_col.save({'_id': self.session_tag,
@@ -177,9 +174,13 @@ class Provenance:
         self.logdir = logdir
         self.session_tag = session_tag
     
-        # Setup MongoDB stuff:
-        c = MongoClient(port=int(port))
-        db = c.reprozip_db
+        # connecting to mongodb
+        try:
+            c = MongoClient(port=int(port))
+            db = c.reprozip_db
+        except:
+            reprozip.debug.error('Could not connect to MongoDB: %s' %sys.exc_info()[1])
+            raise Exception
         
         self.proc_col = db.process_trace
         self.session_status_col = db.session_status
@@ -205,7 +206,11 @@ class Provenance:
         self.proc_col.ensure_index('phases.files_renamed.timestamp')
         
         # storing everything
-        self.do_index()
+        try:
+            self.do_index()
+        except:
+            reprozip.debug.error('Problem while storing the data: %s' %sys.exc_info()[1])
+            raise Exception
         
         # exiting
         self.exit_handler()

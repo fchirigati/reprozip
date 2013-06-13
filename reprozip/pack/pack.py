@@ -80,16 +80,25 @@ def pack(args):
             main_tracer = Tracer(log_basedir = reprozip.utils.log_basedir(),
                                  pass_lite   = PASS_LITE)
             
-            main_tracer.run_tracer()
-            rep_experiment.execute(args['wdir'], args['env'])
-            main_tracer.stop_tracer()
-            
-            main_tracer.store_process_data(port=mongod.port)
+            try:
+                main_tracer.run_tracer()
+                rep_experiment.execute(args['wdir'], args['env'])
+                main_tracer.stop_tracer()
+                
+                main_tracer.store_process_data(port=mongod.port)
+            except:
+                main_tracer.stop_tracer()
+                mongod.stop()
+                sys.exit(1)
             
         # retrieving data
-        rep_experiment.retrieve_experiment_data(db_name         = 'reprozip_db',
-                                                collection_name = 'process_trace',
-                                                port            = mongod.port)
+        try:
+            rep_experiment.retrieve_experiment_data(db_name         = 'reprozip_db',
+                                                    collection_name = 'process_trace',
+                                                    port            = mongod.port)
+        except:
+            mongod.stop()
+            sys.exit(1)
         
         # stopping mongod instance
         mongod.stop()

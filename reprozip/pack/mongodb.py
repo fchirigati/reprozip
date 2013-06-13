@@ -100,7 +100,7 @@ class Mongod:
             return
         
         if (self.__mongodb == None):
-            reprozip.debug.error('mongod instance not found to be stopped.')
+            pass
         else:
             cmd = guess_sudo() + ' mongod --shutdown --dbpath ' + self.__dbpath
             try:
@@ -111,6 +111,8 @@ class Mongod:
                 msg = 'Could not stop mongod: %s. ' %sys.exc_info()[1]
                 msg += 'You may want to try stopping it by running "%s"' %cmd
                 reprozip.debug.warning(msg)
+                
+            self.__mongodb = None
     
     port = property(get_port, None, None, None)
                 
