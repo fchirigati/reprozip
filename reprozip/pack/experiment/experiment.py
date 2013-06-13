@@ -1080,14 +1080,25 @@ class Experiment:
         # pwd        
         pwd = os.path.join(self.__user_exp_dir, self.__prov_tree.root.execve_pwd[1:])
             
-        # executable script
+        # generating executable script
+        self.generate_exec_script(argv_dict, env_var, pwd)
+        
+        # generating VisTrails workflow
+        self.generate_vt_workflow(main_name, argv_dict, env_var, pwd)
+        
+    def generate_exec_script(self, argv_dict, env_var, pwd):
+        """
+        Method that generates an executable script for the execution of
+        the experiment.
+        """
+        
         script = ''
         
         script += 'import os\n'
         script += 'import subprocess\n\n'
         
         script += 'pwd = os.getcwd()\n'
-        script += 'os.chdir(\'%s\')n\n' %pwd
+        script += 'os.chdir(\'%s\')\n\n' %pwd
             
         cmd = ''
         for i in range(0, len(argv_dict), 1):
@@ -1113,10 +1124,6 @@ class Experiment:
         except:
             reprozip.debug.error('Could not create executable script: %s' % sys.exc_info()[1])
             sys.exit(1)
-        
-        # generating VisTrails workflow
-        self.generate_vt_workflow(main_name, argv_dict, env_var, pwd)
-        
             
     def generate_vt_workflow(self, name, argv_dict, env_var, pwd):
         """
