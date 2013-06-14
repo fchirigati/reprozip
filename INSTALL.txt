@@ -16,12 +16,13 @@ How to install ReproZip:
 
 3) If you want to use ReproZip to pack experiments, you also need to install
    both SystemTap and MongoDB.
-   For Ubuntu 9.10 or higher, ReproZip has a script that tries to automatically
-   install these dependencies. Just use the following command:
+   For Ubuntu (9.10 or higher) and Fedora, ReproZip has a script that
+   tries to automatically install these dependencies.
+   Just use the following command:
    
    reprozip-dep
    
-   If you're not using Ubuntu 9.10 or higher, please run the script anyway so
+   If you're not using Ubuntu or Fedora, please run the script anyway so
    the log directories and the configuration file can be correctly created.
    
    Automatic installation of dependencies for other distributions is coming.
@@ -90,4 +91,35 @@ Manually installing the dependencies on Ubuntu 9.10 or higher:
     . mkdir $HOME/.reprozip/mongodb
 
 ********************************************************************************
+
+Manually installing the dependencies on Fedora:
+-----------------------------------------------
+
+These instructions probably also work for Red Hat and CentOS, but it has not yet
+been tested in these environments.
+
+- Install SystemTap
+ 
+  . sudo yum install systemtap systemtap-runtime
+  
+  . sudo yum install kernel-devel-$(uname -r)
+  
+  . sudo debuginfo-install kernel-$(uname -r)
+
+
+- Create log directory
+
+  . mkdir $HOME/.reprozip
+
+
+- Install MongoDB
+
+  . Follow instructions at the official website:
+  
+    http://docs.mongodb.org/manual/tutorial/install-mongodb-on-red-hat-centos-or-fedora-linux/#install-mongodb
+
+  . create the database directory
+  
+    . mkdir $HOME/.reprozip/mongodb
+
 
