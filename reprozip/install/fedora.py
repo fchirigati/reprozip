@@ -32,16 +32,103 @@
 ##
 ###############################################################################
 
+import reprozip.install.utils
+import reprozip.install.ubuntu
+import reprozip.utils
+import platform
+
+ten_gen_64 = ['[10gen]',
+              'name=10gen Repository',
+              'baseurl=http://downloads-distro.mongodb.org/repo/redhat/os/x86_64',
+              'gpgcheck=0',
+              'enabled=1']
+
+ten_gen_32 = ['[10gen]',
+              'name=10gen Repository',
+              'baseurl=http://downloads-distro.mongodb.org/repo/redhat/os/i686',
+              'gpgcheck=0',
+              'enabled=1']
+
+def msg():
+    """
+    Returns message about installation.
+    """
+    
+    msg = 'The following packages will be installed:\n'
+    msg += '  1) systemtap\n'
+    msg += '  2) systemtap-runtime\n'
+    msg += '  3) kernel-devel-' + platform.uname()[2] + '\n'
+    msg += '  4) kernel-' + platform.uname()[2] + '\n'
+    
+    msg += 'Packages 3 and 4 may be upgraded in case they are already installed.\n'
+    msg += 'Do you wish to continue? (Y/N)'
+    
+    return msg
+
 def install_stap():
     """
     Function used to install SystemTap.
     """
     
-    pass
+    sudo = reprozip.install.utils.guess_sudo()
+    val = True
+    
+    def check_val(val):
+        if not val:
+            return False
+    
+    (in_path, filename) = reprozip.utils.executable_in_path('stap')
+    if not in_path:
+        
+        # installing SystemTap
+        cmd = sudo + ' yum install systemtap systemtap-runtime'
+        val = reprozip.install.utils.execute_install_cmd(cmd)
+        check_val(val)
+        
+    # installing kernel debug symbols
+    cmd = sudo + ' yum install kernel-devel-' + platform.uname()[2]
+    val = reprozip.install.utils.execute_install_cmd(cmd)
+    check_val(val)
+    
+    cmd = sudo + ' debuginfo-install kernel-' + platform.uname()[2]
+    val = reprozip.install.utils.execute_install_cmd(cmd)
+    check_val(val)
+        
+    return reprozip.install.ubuntu.test_stap()
 
 def install_mongodb():
     """
     Function used to install MongoDB.
     """
     
-    pass
+    sudo = reprozip.install.utils.guess_sudo()
+    val = True
+    
+    def check_val(val):
+        if not val:
+            return False
+        
+    (in_path, filename) = reprozip.utils.executable_in_path('mongod')
+    if not in_path:
+        
+        # configuring yum
+        f = '/etc/yum.repos.d/10gen.repo'
+        if not os.path.exists(f):
+            t = tempfile.NamedTemporaryFile(mode='w', delete=False)
+            if reprozip.install.utils.architecture() == 64:
+                t.write('\n'.join(ten_gen_64))
+            elif reprozip.install.utils.architecture() == 32:
+                t.write('\n'.join(ten_gen_32))
+            else:
+                return False
+            t.close()
+            cmd = sudo + ' cp ' + t.name + ' ' + f
+            val = reprozip.install.utils.execute_install_cmd(cmd)
+            check_val(val)
+            
+        # installing MongoDB
+        cmd = sudo + ' yum install mongo-10gen-2.4.4 mongo-10gen-server-2.4.4'
+        val = reprozip.install.utils.execute_install_cmd(cmd)
+        check_val(val)
+    
+    return True

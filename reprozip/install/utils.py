@@ -39,6 +39,16 @@ import subprocess
 import os
 import sys
 
+def architecture():
+    """
+    Returns architecture of machine.
+    """
+    
+    arch_dict = {'AMD64': 64, 'x86_64': 64, 'i386': 32, 'i686': 32, 'x86': 32}
+    
+    machine = platform.machine()
+    return arch_dict.get(machine, None)
+
 def execute_install_cmd(cmd):
     """
     Execute a command line for installation.
