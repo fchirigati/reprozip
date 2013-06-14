@@ -37,6 +37,7 @@ import reprozip.utils
 import subprocess
 import platform
 import tempfile
+import inspect
 import os
 
 lsb_release = platform.linux_distribution()[2]
@@ -46,6 +47,26 @@ ddebs = ['deb http://ddebs.ubuntu.com ' + lsb_release + ' main restricted univer
          'deb http://ddebs.ubuntu.com ' + lsb_release + '-proposed main restricted universe multiverse']
 
 ten_gen = ['deb http://downloads-distro.mongodb.org/repo/ubuntu-upstart dist 10gen']
+
+def msg():
+    """
+    Returns message about installation.
+    """
+    
+    msg = 'The following packages will be installed:\n'
+    msg += '  1) systemtap\n'
+    msg += '  2) pkg-create-dbgsym\n'
+    msg += '  3) linux-headers-generic\n'
+    msg += '  4) gcc\n'
+    msg += '  5) libcap-dev\n'
+    msg += '  6) linux-image-' + platform.uname()[2] + '-dbgsym\n'
+    msg += '  7) elfutils\n'
+    msg += '  8) mongodb-10gen\n'
+    
+    msg += 'Packages 3, 5 and 6 may be upgraded in case they are already installed.\n'
+    msg += 'Do you wish to continue? (Y/N)'
+    
+    return msg
 
 def test_stap():
     """
@@ -130,6 +151,21 @@ def install_stap():
     # installing debug package
     uname = platform.uname()[2]
     cmd = sudo + ' apt-get install linux-image-' + uname + '-dbgsym'
+    val = reprozip.install.utils.execute_install_cmd(cmd)
+    check_val(val)
+    
+    (in_path, filename) = reprozip.utils.executable_in_path('eu-readelf')
+    if not in_path:
+        
+        # installing elfutils
+        cmd = sudo + ' apt-get install elfutils'
+        val = reprozip.install.utils.execute_install_cmd(cmd)
+        check_val(val)
+        
+    # running eu-readelf script
+    dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+    script = os.path.join(dir, 'eu-readelf-script')
+    cmd = sudo + ' ' + script
     val = reprozip.install.utils.execute_install_cmd(cmd)
     check_val(val)
         

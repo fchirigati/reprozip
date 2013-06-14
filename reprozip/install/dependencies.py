@@ -103,18 +103,7 @@ def install_dependencies():
             reprozip.debug.warning('%s currently not supported for automatically installing the dependencies.' %distro)
             sys.exit(0)
         
-        msg = 'The following packages will be installed:\n'
-        msg += '  1) systemtap\n'
-        msg += '  2) pkg-create-dbgsym\n'
-        msg += '  3) linux-headers-generic\n'
-        msg += '  4) gcc\n'
-        msg += '  5) libcap-dev\n'
-        msg += '  6) linux-image-' + platform.uname()[2] + '-dbgsym\n'
-        msg += '  7) mongodb-10gen\n'
-        
-        msg += 'Packages 3, 5 and 6 may be upgraded in case they are already installed.\n'
-        msg += 'Do you wish to continue? (Y/N)'
-        reprozip.debug.warning(msg)
+        reprozip.debug.warning(dep.msg())
         
         answer = ''
         while answer.upper() != 'Y' and answer.upper() != 'N':
