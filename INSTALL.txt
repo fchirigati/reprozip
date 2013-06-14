@@ -65,16 +65,18 @@ Manually installing the dependencies on Ubuntu 9.10 or higher:
     sudo stap -ve 'probe begin { log("hello world") exit () }'
     sudo stap -v -e 'probe vfs.read {printf("read performed\n"); exit()}'
     
-  . For more information on how to install SystemTap on Ubuntu, please refer to
+  . Installing SystemTap can be tricky.
+    For more information on how to install SystemTap on Ubuntu, please refer to
     the following links:
     
     http://sourceware.org/systemtap/wiki/SystemtapOnUbuntu
     https://lists.ubuntu.com/archives/ubuntu-users/2010-October/229714.html
+    http://sourceware.org/systemtap/wiki/SystemtapOnUbuntu
 
 
 - Create log directory
 
-  . sudo mkdir /opt/reprozip
+  . mkdir $HOME/.reprozip
 
 
 - Install MongoDB
@@ -85,7 +87,7 @@ Manually installing the dependencies on Ubuntu 9.10 or higher:
 
   . create the database directory
   
-    . mkdir /opt/reprozip/mongodb
+    . mkdir $HOME/.reprozip/mongodb
 
 ********************************************************************************
 
