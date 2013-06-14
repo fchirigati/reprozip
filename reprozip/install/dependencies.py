@@ -116,20 +116,21 @@ def install_dependencies():
         # SystemTap
         reprozip.debug.success('Checking / installing SystemTap...')
         stap = dep.install_stap()
-            
-        # MongoDB
-        reprozip.debug.success('Checking / installing MongoDB...')
-        mongodb = dep.install_mongodb()
-        
         if not stap:
             reprozip.debug.warning('SystemTap is not successfully installed.')
         else:
             reprozip.debug.success('SystemTap: done!')
             
+        # MongoDB
+        reprozip.debug.success('Checking / installing MongoDB...')
+        mongodb = dep.install_mongodb()
         if not mongodb:
             reprozip.debug.warning('MongoDB is not successfully installed.')
         else:
             reprozip.debug.success('MongoDB: done!')
+            
+        if not stap:
+            reprozip.debug.warning('SystemTap is not successfully installed.')
         
     else:
         reprozip.debug.warning('%s currently not supported.' %os_)

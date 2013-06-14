@@ -163,11 +163,13 @@ def install_stap():
         check_val(val)
         
     # running eu-readelf script
+    print "Running eu-readelf script..."
     dir = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
     script = os.path.join(dir, 'eu-readelf-script')
     cmd = sudo + ' ' + script
     val = reprozip.install.utils.execute_install_cmd(cmd)
     check_val(val)
+    print "Done!"
         
     return test_stap()
 
