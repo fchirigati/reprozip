@@ -8,7 +8,9 @@ If you want to use ReproZip to unpack a reproducible package,
 you do not need to have SystemTap and MongoDB.
 
 How to install ReproZip:
+
 1) Download the latest version at https://pypi.python.org/pypi/reprozip
+
 2) After extracting the package, use the following command (you may need root
    privileges):
    
@@ -25,10 +27,19 @@ How to install ReproZip:
    If you're not using Ubuntu or Fedora, please run the script anyway so
    the log directories and the configuration file can be correctly created.
    
+   Note that installing the kernel packages for SystemTap and making it work
+   can be tricky. So, the script does not guarantee that SystemTap will be
+   correctly installed - errors may occur.
+   We suggest you to also take a look at the installation instructions in this
+   file and follow the additional links there for more information.
+   
    Automatic installation of dependencies for other distributions is coming.
    Please, send an email to fchirigati@nyu.edu if you want to have an automatic
    installation feature for your favorite Linux distribution in the future, so
    we can put it in our TO-DO list :)
+   
+   Problems while installing SystemTap or MongoDB?
+   Contact Fernando Chirigati at fchirigati@nyu.edu and see if he can help you!
    
 ReproZip is in a beta version, so please, if you have any bugs while installing
 the tool (and dependencies), send an email to fchirigati@nyu.edu
@@ -66,8 +77,7 @@ Manually installing the dependencies on Ubuntu 9.10 or higher:
     sudo stap -ve 'probe begin { log("hello world") exit () }'
     sudo stap -v -e 'probe vfs.read {printf("read performed\n"); exit()}'
     
-  . Installing SystemTap can be tricky.
-    For more information on how to install SystemTap on Ubuntu, please refer to
+  . For more information on how to install SystemTap on Ubuntu, please refer to
     the following links:
     
     http://sourceware.org/systemtap/wiki/SystemtapOnUbuntu
@@ -102,10 +112,17 @@ been tested in these environments.
  
   . sudo yum install systemtap systemtap-runtime
   
-  . sudo yum install kernel-devel-$(uname -r)
+  . sudo yum install kernel-devel.$(uname -m)
   
-  . sudo debuginfo-install kernel-$(uname -r)
-
+    Note that your kernel version may NOT be listed by 'yum' because it is in
+    an older tree (you can see your kernel version by running 'uname -r'). 
+    In this case, you can download it manually in the following website
+    and install it using rpm
+    
+    http://koji.fedoraproject.org/koji/packageinfo?packageID=8
+  
+  . sudo debuginfo-install kernel.$(uname -m)
+  
   . For more information on how to install SystemTap, please refer to
     the following link:
 
