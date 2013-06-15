@@ -36,6 +36,7 @@ import reprozip.install.utils
 import reprozip.install.ubuntu
 import reprozip.utils
 import platform
+import os
 
 ten_gen_64 = ['[10gen]',
               'name=10gen Repository',
