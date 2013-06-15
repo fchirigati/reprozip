@@ -102,9 +102,9 @@ been tested in these environments.
  
   . sudo yum install systemtap systemtap-runtime
   
-  . sudo yum install kernel-devel.$(uname -m)
+  . sudo yum install kernel-devel-$(uname -r)
   
-  . sudo debuginfo-install kernel.$(uname -m)
+  . sudo debuginfo-install kernel-$(uname -r)
 
   . For more information on how to install SystemTap, please refer to
     the following link:
