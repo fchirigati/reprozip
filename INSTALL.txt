@@ -105,27 +105,28 @@ Manually installing the dependencies on Ubuntu 9.10 or higher:
 Manually installing the dependencies on Fedora:
 -----------------------------------------------
 
-These instructions probably also work for Red Hat and CentOS, but it has not yet
-been tested in these environments.
-
 - Install SystemTap
  
   . sudo yum install systemtap systemtap-runtime
   
-  . sudo yum install kernel-devel.$(uname -m)
+  . sudo yum install kernel-devel
   
     Note that your kernel version may NOT be listed by 'yum' because it is in
     an older tree (you can see your kernel version by running 'uname -r'). 
     In this case, you can download it manually in the following website
-    and install it using rpm
+    and install it using 'rpm':
     
     http://koji.fedoraproject.org/koji/packageinfo?packageID=8
+    
+    Another option is to update your kernel, reboot your system, and
+    use 'yum' again.
   
-  . sudo debuginfo-install kernel.$(uname -m)
+  . sudo debuginfo-install kernel
   
   . For more information on how to install SystemTap, please refer to
     the following link:
 
+    http://sourceware.org/systemtap/wiki/SystemtapOnFedora
     http://sourceware.org/systemtap/SystemTap_Beginners_Guide/using-systemtap.html#using-setup
 
 

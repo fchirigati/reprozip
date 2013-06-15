@@ -59,10 +59,10 @@ def msg():
     msg = 'The following packages will be installed:\n'
     msg += '  1) systemtap\n'
     msg += '  2) systemtap-runtime\n'
-    msg += '  3) kernel-devel.' + platform.uname()[4] + '\n'
-    msg += '  4) kernel.' + platform.uname()[4] + '\n'
+    msg += '  3) kernel-devel\n'
+    msg += '  4) kernel-debuginfo\n'
+    msg += '  5) kernel-debuginfo-common\n'
     
-    msg += 'Packages 3 and 4 may be upgraded in case they are already installed.\n'
     msg += 'Do you wish to continue? (Y/N)'
     
     return msg
@@ -88,11 +88,11 @@ def install_stap():
         check_val(val)
         
     # installing kernel debug symbols
-    cmd = sudo + ' yum install kernel-devel.' + platform.uname()[4]
+    cmd = sudo + ' yum install kernel-devel'
     val = reprozip.install.utils.execute_install_cmd(cmd)
     check_val(val)
     
-    cmd = sudo + ' debuginfo-install kernel.' + platform.uname()[4]
+    cmd = sudo + ' debuginfo-install kernel'
     val = reprozip.install.utils.execute_install_cmd(cmd)
     check_val(val)
         
