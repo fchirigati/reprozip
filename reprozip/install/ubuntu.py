@@ -191,10 +191,11 @@ def install_mongodb():
         # including 10gen repository
         f = '/etc/apt/sources.list.d/10gen.list'
         if not os.path.exists(f):
-            t = tempfile.NamedTemporaryFile(mode='w', delete=False)
+            temp_file = os.path.join(reprozip.utils.log_basedir(), '.10gen.list')
+            t = open(temp_file, 'w')
             t.write('\n'.join(ten_gen))
             t.close()
-            cmd = sudo + ' cp ' + t.name + ' ' + f
+            cmd = sudo + ' cp ' + temp_file + ' ' + f
             val = reprozip.install.utils.execute_install_cmd(cmd)
             check_val(val)
         
