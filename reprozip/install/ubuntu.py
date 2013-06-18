@@ -131,7 +131,7 @@ def install_stap():
     ddebs_file = '/etc/apt/sources.list.d/ddebs.list'
     if not os.path.exists(ddebs_file):
         temp_file = os.path.join(reprozip.utils.log_basedir(), '.ddebs.list')
-        t = open(tempo_file, 'w')
+        t = open(temp_file, 'w')
         t.write('\n'.join(ddebs))
         t.close()
         cmd = sudo + ' cp ' + temp_file + ' ' + ddebs_file

@@ -36,7 +36,6 @@ import reprozip.install.utils
 import reprozip.install.ubuntu
 import reprozip.utils
 import platform
-import tempfile
 import os
 
 ten_gen_64 = ['[10gen]',
@@ -116,7 +115,8 @@ def install_mongodb():
         # configuring yum
         f = '/etc/yum.repos.d/10gen.repo'
         if not os.path.exists(f):
-            t = tempfile.NamedTemporaryFile(mode='w', delete=False)
+            temp_file = os.path.join(reprozip.utils.log_basedir(), '.10gen.repo')
+            t = open(temp_file, 'w')
             if reprozip.install.utils.architecture() == 64:
                 t.write('\n'.join(ten_gen_64))
             elif reprozip.install.utils.architecture() == 32:
@@ -124,7 +124,7 @@ def install_mongodb():
             else:
                 return False
             t.close()
-            cmd = sudo + ' cp ' + t.name + ' ' + f
+            cmd = sudo + ' cp ' + temp_file + ' ' + f
             val = reprozip.install.utils.execute_install_cmd(cmd)
             check_val(val)
             
