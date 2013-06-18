@@ -36,7 +36,6 @@ import reprozip.install.utils
 import reprozip.utils
 import subprocess
 import platform
-import tempfile
 import inspect
 import os
 
@@ -131,10 +130,11 @@ def install_stap():
     # including ddebs repositories
     ddebs_file = '/etc/apt/sources.list.d/ddebs.list'
     if not os.path.exists(ddebs_file):
-        t = tempfile.NamedTemporaryFile(mode='w', delete=False)
+        temp_file = os.path.join(reprozip.utils.log_basedir(), '.ddebs.list')
+        t = open(tempo_file, 'w')
         t.write('\n'.join(ddebs))
         t.close()
-        cmd = sudo + ' cp ' + t.name + ' ' + ddebs_file
+        cmd = sudo + ' cp ' + temp_file + ' ' + ddebs_file
         val = reprozip.install.utils.execute_install_cmd(cmd)
         check_val(val)
         
