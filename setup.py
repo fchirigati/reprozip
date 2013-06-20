@@ -11,7 +11,7 @@ setup(
       license = 'LICENSE.txt',
       include_package_data = True,
       description = 'Reproducibility tool for packing and unpacking experiments.',
-      long_description = open('README.txt').read(),
+      long_description = open('README.rst').read(),
       install_requires = [
                           'pymongo >= 2.5.2'
                           ],
