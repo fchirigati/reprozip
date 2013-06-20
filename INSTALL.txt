@@ -39,7 +39,8 @@ How to install ReproZip:
    we can put it in our TO-DO list :)
    
    Problems while installing SystemTap or MongoDB?
-   Contact Fernando Chirigati at fchirigati@nyu.edu and see if he can help you!
+   Contact Fernando Chirigati at fchirigati@nyu.edu to see if he can help you!
+   Using Google may also help a lot :)
    
 ReproZip is in a beta version, so please, if you have any bugs while installing
 the tool (and dependencies), send an email to fchirigati@nyu.edu
@@ -120,6 +121,10 @@ Manually installing the dependencies on Fedora:
     
     Another option is to update your kernel, reboot your system, and
     use 'yum' again.
+    
+    Make sure you have the kernel-develfor your kernel version.
+    'yum' may install the kernel-devel for a newer kernel version, even if
+    your version is different.
   
   . sudo debuginfo-install kernel
   
