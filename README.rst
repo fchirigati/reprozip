@@ -4,7 +4,8 @@ ReproZip
 
 ReproZip is a general tool for Linux distributions that simplifies the process of creating reproducible experiments from command-line executions, a frequently-used common denominator in computational science. It tracks operating system calls and creates a package that contains all the binaries, files and dependencies required to run a given command on the author's computational environment E. ReproZip also generates a workflow specification for the experiment, which can be used to help reviewers to explore and verify the experiment. A reviewer can extract the files and workflow on another environment E' (e.g., the reviewer's desktop), without interfering with any program or dependency already installed on E'.
 
-Limitations:
+Limitations
+-----------
 
 * Environments E and E' need to have similar hardware architecture and Linux kernel.
 * An experiment cannot be reproduced if its executables and scripts use hard-coded absolute paths.
@@ -15,8 +16,8 @@ For more information and to report bugs, contact Fernando Chirigati at fchirigat
 Publications
 ------------
 
-* `SIGMOD'13 http://vgc.poly.edu/~fchirigati/papers/SIGMOD-2013.pdf‎`
-* `TaPP'13 http://vgc.poly.edu/~fchirigati/papers/TaPP-2013.pdf`
+* SIGMOD 2013: http://vgc.poly.edu/~fchirigati/papers/SIGMOD-2013.pdf‎
+* TaPP 2013: http://vgc.poly.edu/~fchirigati/papers/TaPP-2013.pdf
 
 How To Install ReproZip
 =======================
@@ -70,7 +71,7 @@ To reproduce the experiment, just use::
 Using VisTrails for Reproducibility
 -----------------------------------
 
-Alternatively, you can use the `VisTrails http://www.vistrails.org` workflow to reproduce, vary and explore the results. You can skip steps 1, 2 and 3 if you had VisTrails already installed when unpacking the experiment.
+Alternatively, you can use the VisTrails workflow to reproduce, vary and explore the results. You can skip steps 1, 2 and 3 if you had VisTrails already installed when unpacking the experiment.
 
 1. Download VisTrails at http://www.vistrails.org/index.php/Downloads and install it;
 2. Create a directory named *CLTools* under *$HOME/.vistrails*;
@@ -81,7 +82,7 @@ Alternatively, you can use the `VisTrails http://www.vistrails.org` workflow to 
 
 For more information about VisTrails, please visit http://www.vistrails.org
 
-MongoDB considerations
+MongoDB Considerations
 ======================
 
 ReproZip uses MongoDB in the packing step to keep information about packed experiments. There is no option to use ReproZip in the packing step without MongoDB.
@@ -96,3 +97,12 @@ The default settings can be found at ReproZip's configuration file (*$HOME/.repr
 * *logpath*: specifies a path for the log file;
 * *quiet*: indicates whether MongoDB should limit the amount of output; setting it to True keeps the output significantly smaller.
 
+Special Thanks
+==============
+
+* Jesse Lingeman
+* Lis Custodio
+* Tiago Etiene
+* Sinesio Pesco
+* Claudio Silva
+* VisTrails team
