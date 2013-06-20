@@ -35,3 +35,4 @@
 import reprozip.install.utils
 import reprozip.install.ubuntu
 import reprozip.install.fedora
+import reprozip.install.debian

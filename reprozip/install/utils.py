@@ -86,18 +86,7 @@ def guess_linux_distro():
     Returns the linux distro.
     """
     
-    linux_distros = ['ubuntu',
-                     'fedora',
-                     'suse',
-                     'redhat',
-                     'debian']
-    
-    distro = platform.linux_distribution()[0].lower()
-    for d in linux_distros:
-        if d == distro:
-            return d
-    
-    return distro
+    return platform.linux_distribution()[0].lower()
         
 def guess_sudo():
     """

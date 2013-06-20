@@ -36,6 +36,7 @@ from reprozip.pack.config_parser import Parser
 import reprozip.install.utils
 import reprozip.install.ubuntu
 import reprozip.install.fedora
+import reprozip.install.debian
 import reprozip.debug
 import platform
 import sys
@@ -98,6 +99,10 @@ def install_dependencies():
         # Fedora
         elif distro == 'fedora':
             dep = reprozip.install.fedora
+            
+        # Debian
+        elif distro == 'debian':
+            dep = reprozip.install.debian
         
         else:
             reprozip.debug.warning('%s currently not supported for automatically installing the dependencies.' %distro)
