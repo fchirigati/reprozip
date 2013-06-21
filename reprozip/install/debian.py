@@ -69,6 +69,11 @@ def install_stap():
     def check_val(val):
         if not val:
             return False
+        
+    # updating repository
+    cmd = sudo + ' apt-get update'
+    val = reprozip.install.utils.execute_install_cmd(cmd)
+    check_val(val)
     
     (in_path, filename) = reprozip.utils.executable_in_path('stap')
     if not in_path:
