@@ -83,6 +83,7 @@ mongodb_port = '27020'
 mongodb_dbpath = os.path.join(log_basedir(), 'mongodb')
 mongodb_logpath = os.path.join(mongodb_dbpath, 'mongodb.log')
 mongodb_quiet = 'True'
+mongodb_journaling = 'False'
 
 def executable_in_path(executable):
     """

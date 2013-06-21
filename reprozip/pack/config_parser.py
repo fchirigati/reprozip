@@ -57,6 +57,7 @@ class Parser:
         config = ConfigParser.RawConfigParser()
         
         config.add_section('mongodb')
+        config.set('mongodb', 'journaling', reprozip.utils.mongodb_journaling)
         config.set('mongodb', 'quiet', reprozip.utils.mongodb_quiet)
         config.set('mongodb', 'logpath', reprozip.utils.mongodb_logpath)
         config.set('mongodb', 'dbpath', reprozip.utils.mongodb_dbpath)
@@ -79,6 +80,7 @@ class Parser:
         dbpath = config.get('mongodb', 'dbpath')
         logpath = config.get('mongodb', 'logpath')
         quiet = config.getboolean('mongodb', 'quiet')
+        journaling = config.getboolean('mongodb', 'journaling')
         
-        return (on, port, dbpath, logpath, quiet)
+        return (on, port, dbpath, logpath, quiet, journaling)
         

@@ -57,10 +57,11 @@ class Mongod:
         self.__dbpath = None
         self.__logpath = None
         self.__quiet = None
+        self.__journaling = None
         
         parser = Parser()
         t = parser.read_mongodb_config()
-        (self.__on, self.__port, self.__dbpath, self.__logpath, self.__quiet) = t
+        (self.__on, self.__port, self.__dbpath, self.__logpath, self.__quiet, self.__journaling) = t
 
     def get_port(self):
         return self.__port
@@ -77,9 +78,13 @@ class Mongod:
         if not self.__quiet:
             quiet = ''
             
+        journaling = ' --nojournal'
+        if self.__journaling:
+            journaling = ''
+            
         cmd = guess_sudo() + ' mongod --fork' + quiet +  ' --port '
         cmd += self.__port + ' --dbpath ' + self.__dbpath + ' --logpath '
-        cmd += self.__logpath + ' --logappend'
+        cmd += self.__logpath + ' --logappend' + journaling
         
         try:
             self.__mongodb = subprocess.Popen(cmd.split(),
