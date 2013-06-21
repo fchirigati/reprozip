@@ -19,7 +19,7 @@ How to install ReproZip:
 3) If you want to use ReproZip to pack experiments, you also need to install
    both SystemTap and MongoDB.
    For Ubuntu (9.10 or higher), Debian and Fedora, ReproZip has a script that
-   tries to automatically install these dependencies.
+   tries to automatically install these dependencies (not fully tested though).
    Just use the following command:
    
    reprozip-dep
