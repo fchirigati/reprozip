@@ -94,7 +94,7 @@ The default settings can be found at ReproZip's configuration file (*$HOME/.repr
 * *dbpath*: specifies a directory for the mongod instance to store its data;
 * *logpath*: specifies a path for the log file;
 * *quiet*: indicates whether MongoDB should limit the amount of output; setting it to True keeps the output significantly smaller;
-* *journaling*: indicated whether journaling is enabled; the default is False.
+* *journaling*: indicates whether journaling is enabled; the default is False.
 
 Acknowledgements
 ================
