@@ -231,6 +231,39 @@ def unpack(args):
             reprozip.debug.warning('Could not copy file "%s": %s' %(os.path.basename(path),sys.exc_info()[1]))
             continue
         
+    # configuration files
+    config_files = []
+    config_file = os.path.join(exp_dir, os.path.basename(reprozip.utils.config_file_path))
+    if os.path.exists(config_file):
+        try:
+            f = open(config_file, 'r')
+            config_files = pickle.load(f)
+            f.close()
+        except:
+            reprozip.debug.error('Could not de-serialize object structures: %s' % sys.exc_info()[1])
+            sys.exit(1)
+            
+        for config in config_files:
+            config = config.replace(reprozip.utils.user_dir_var,
+                                    os.path.normpath(wdir))
+            
+            try:
+                f = open(config, 'r')
+                contents = f.read()
+                f.close()
+                
+                # replacing user directory
+                contents = contents.replace(reprozip.utils.user_dir_var,
+                                            os.path.normpath(wdir))
+                
+                f = open(config, 'w')
+                f.write(contents)
+                f.close()
+            except:
+                reprozip.debug.error('Error while replacing the directory info: %s' % sys.exc_info()[1])
+                sys.exit(1)
+            
+        
     # symbolic links
     
     # getting the mapping

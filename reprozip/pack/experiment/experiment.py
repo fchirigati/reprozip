@@ -74,6 +74,9 @@ class Experiment:
         # output files
         self.__output_files = []
         
+        # configuration files
+        self.__config_files = {}
+        
         # symbolic links
         self.__symlink_to_target = {}
         self.__symlink_chain = {} # 'key' is the first symbolic link, and 'value' is a list containing the chain
@@ -630,13 +633,23 @@ class Experiment:
                                 self.__targets.pop(target)
                             continue
                         
+                        # include or not
                         if (element[2].lower() != 'y') and (element[2].lower() != 'n'):
                             reprozip.debug.error('Bad configuration file: value "%s" unrecognized' % element[2])
                             sys.exit(1)
                             
+                        # configuration files
+#                        if (element[3].lower() != 'y') and (element[3].lower() != 'n'):
+#                            reprozip.debug.error('Bad configuration file: value "%s" unrecognized' % element[3])
+#                            sys.exit(1)
+                            
                         include = True
                         if element[2].lower() == 'n':
                             include = False
+                            
+                        config_file = False
+#                        if element[3].lower() == 'y':
+#                            config_file = True
                             
                         if not file_dict.has_key(element[0]):
                             # maybe file is a target?
@@ -646,8 +659,10 @@ class Experiment:
                                     for symlink in self.__symlink_to_target:
                                         if self.__symlink_to_target[symlink] == element[0]:
                                             self.__symlink_to_target.pop(symlink)
-                                else:
-                                    self.__targets[element[0]] = element[3]
+                                elif config_file:
+                                    self.__config_files[element[0]] = self.__targets[element[0]]
+                                #else:
+                                #    self.__targets[element[0]] = element[3]
                                 continue
                             reprozip.debug.error('Bad configuration file: file "%s" not found' % element[0])
                             sys.exit(1)
@@ -658,8 +673,14 @@ class Experiment:
                                 target = self.__symlink_to_target[element[0]]
                                 self.__symlink_to_target.pop(element[0])
                                 self.__targets.pop(target)
-                        else:
-                            file_dict[element[0]] = element[3]
+                        elif config_file:
+                            if self.__symlink_to_target.has_key(element[0]):
+                                target = self.__symlink_to_target[element[0]]
+                                self.__config_files[target] = self.__targets[target]
+                            else:
+                                self.__config_files[element[0]] = file_dict[element[0]]
+                        #else:
+                        #    file_dict[element[0]] = element[3]
                                 
         ########################################################################
         
@@ -736,7 +757,41 @@ class Experiment:
             try:
                 if not os.path.exists(os.path.dirname(rep_file)):
                     os.makedirs(os.path.dirname(rep_file))
+                
+#                # configuration files
+#                if (self.__config_files[original_file]) and (not program):
+#                    file_ = self.__config_files[original_file]
+#                    f = open(original_file, 'r')
+#                    config = f.read()
+#                    f.close()
+#                    
+#                    # this is a very bad approach - change it later
+#                    for child_program in self.__child_programs:
+#                        config = config.replace(child_program,
+#                                                self.__child_programs[child_program].replace(reprozip.utils.rep_dir_var, self.__user_dir))
+#                        
+#                    for input_file in self.__input_files:
+#                        config = config.replace(input_file,
+#                                                self.__input_files[input_file].replace(reprozip.utils.rep_dir_var, self.__user_dir))
+#                        
+#                    for child_input_file in self.__child_input_files:
+#                        config = config.replace(child_input_file,
+#                                                self.__child_input_files[child_input_file].replace(reprozip.utils.rep_dir_var, self.__user_dir))
+#                        
+#                    for dep in self.__dependencies:
+#                        config = config.replace(dep,
+#                                                self.__dependencies[dep].replace(reprozip.utils.rep_dir_var, self.__user_dir))
+#                        
+#                    f = open(rep_file, 'w')
+#                    f.write(config)
+#                    f.close()
+#                    
+#                    self.__config_files[original_file] = file_.replace(reprozip.utils.rep_dir_var, self.__user_dir)
+#                    
+#                # other files
+#                else:
                 shutil.copyfile(original_file, rep_file)
+                    
                 if program:
                     #shutil.copystat(original_file, rep_file)
                     os.chmod(rep_file, stat.S_IXUSR | stat.S_IXOTH |
@@ -889,6 +944,18 @@ class Experiment:
         except:
             reprozip.debug.error('Could not serialize object structures: %s' % sys.exc_info()[1])
             sys.exit(1)
+            
+        # storing configuration files
+        if self.__config_files:
+            config_file = reprozip.utils.config_file_path.replace(reprozip.utils.rep_dir_var, self.__rep_dir)
+            try:
+                f = open(config_file, 'w')
+                pickle.dump(self.__config_files.values(),
+                            f, pickle.HIGHEST_PROTOCOL)
+                f.close()
+            except:
+                reprozip.debug.error('Could not serialize object structures: %s' % sys.exc_info()[1])
+                sys.exit(1)
         
         # environment variables
         env_var = {}
@@ -1615,8 +1682,11 @@ class Experiment:
         # include or not
         third_column = ['* Include? *', '']
         
+        # configuration file
+        #fourth_column = ['* Config File? *', '']
+        
         # file in the reproducible folder
-        fourth_column = ['* Package File *', '']
+        #fifth_column = ['* Package File *', '']
         
         ########################################################################
         
@@ -1632,12 +1702,14 @@ class Experiment:
             first_column = []
             second_column = []
             third_column = []
-            fourth_column = []
+            #fourth_column = []
+            #fifth_column = []
             
             first_column.append('[%s]' %title)
             second_column.append('')
             third_column.append('')
-            fourth_column.append('')
+            #fourth_column.append('')
+            #fifth_column.append('')
             
             for file_ in file_dict:
                 size = ''
@@ -1649,7 +1721,8 @@ class Experiment:
                 first_column.append(file_)
                 second_column.append(size)
                 third_column.append('Y')
-                fourth_column.append(file_dict[file_])
+                #fourth_column.append('N')
+                #fifth_column.append(file_dict[file_])
                 
                 if self.__symlink_to_target.has_key(file_):
                     size = ''
@@ -1661,61 +1734,64 @@ class Experiment:
                     first_column.append(self.__symlink_to_target[file_])
                     second_column.append(size)
                     third_column.append('Y')
-                    fourth_column.append(self.__targets[self.__symlink_to_target[file_]])
+                    #fourth_column.append('N')
+                    #fifth_column.append(self.__targets[self.__symlink_to_target[file_]])
                 
             first_column.append('')
             second_column.append('')
             third_column.append('')
-            fourth_column.append('')
+            #fourth_column.append('')
+            #fifth_column.append('')
             
-            return (first_column, second_column, third_column, fourth_column)
+            return (first_column, second_column, third_column)
+            #return (first_column, second_column, third_column, fourth_column)
         
         ########################################################################
         
         # main program
         if len(self.__main_program) == 1:
-            (first, second, third, fourth) = include_in_config('main program',
-                                                               self.__main_program)
+            (first, second, third) = include_in_config('main program',
+                                                       self.__main_program)
             first_column += first
             second_column += second
             third_column += third
-            fourth_column += fourth
+            #fourth_column += fourth
         
         # child programs
         if len(self.__child_programs) > 0:
-            (first, second, third, fourth) = include_in_config('other programs',
-                                                               self.__child_programs)
+            (first, second, third) = include_in_config('other programs',
+                                                       self.__child_programs)
             first_column += first
             second_column += second
             third_column += third
-            fourth_column += fourth
+            #fourth_column += fourth
                 
         # main input files
         if len(self.__input_files) > 0:
-            (first, second, third, fourth) = include_in_config('main input files',
-                                                               self.__input_files)
+            (first, second, third) = include_in_config('main input files',
+                                                       self.__input_files)
             first_column += first
             second_column += second
             third_column += third
-            fourth_column += fourth
+            #fourth_column += fourth
                 
         # child input files
         if len(self.__child_input_files) > 0:
-            (first, second, third, fourth) = include_in_config('other input files',
-                                                               self.__child_input_files)
+            (first, second, third) = include_in_config('other input files',
+                                                       self.__child_input_files)
             first_column += first
             second_column += second
             third_column += third
-            fourth_column += fourth
+            #fourth_column += fourth
         
         # dependencies
         if len(self.__dependencies) > 0:
-            (first, second, third, fourth) = include_in_config('dependencies',
-                                                               self.__dependencies)
+            (first, second, third) = include_in_config('dependencies',
+                                                       self.__dependencies)
             first_column += first
             second_column += second
             third_column += third
-            fourth_column += fourth
+            #fourth_column += fourth
             
         # exclude patterns
         # these patterns should be written using Unix shell-style wildcards,
@@ -1723,19 +1799,19 @@ class Experiment:
         first_column.append('[exclude]')
         second_column.append('')
         third_column.append('')
-        fourth_column.append('')
+        #fourth_column.append('')
         
         # maximum lengths, for the purpose of formatting
         max_first = str(len(max(first_column, key=len)))
         max_second = str(len(max(second_column, key=len)))
         max_third = str(len(max(third_column, key=len)))
+        #max_fourth = str(len(max(fourth_column, key=len)))
         
-        format = '{:<%s}\t{:^%s}\t{:^%s}\t{:<1}\n' % (max_first, max_second, max_third)
+        format = '{:<%s}\t{:^%s}\t{:^%s}\n' % (max_first, max_second, max_third)
         for i in range(len(first_column)):
             config_file += format.format(first_column[i],
                                          second_column[i],
-                                         third_column[i],
-                                         fourth_column[i])
+                                         third_column[i])
             
         try:
             f = open(reprozip.utils.config_path, 'w')

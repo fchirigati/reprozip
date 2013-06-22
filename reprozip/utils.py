@@ -57,6 +57,7 @@ exec_path = os.path.join(rep_dir_var, 'rep.exec')
 config_path = os.path.join(os.getcwd(), 'rep.config')
 objs_path = os.path.join(os.getcwd(), '.rep.objs')
 symlink_path = os.path.join(rep_dir_var, '.symlinks')
+config_file_path = os.path.join(rep_dir_var, '.config_files')
 
 # Path separator used to copy files and dependencies
 sep = '_$_'
