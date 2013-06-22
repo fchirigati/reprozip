@@ -80,8 +80,8 @@ Alternatively, you can use the VisTrails workflow to reproduce, vary and explore
 
 For more information about VisTrails, please visit http://www.vistrails.org
 
-MongoDB Considerations
-======================
+MongoDB Configuration Parameters
+================================
 
 ReproZip uses MongoDB in the packing step to keep information about packed experiments. There is no option to use ReproZip in the packing step without MongoDB.
 
