@@ -384,53 +384,62 @@ class Experiment:
         
         # assuring the symbolic links are really symbolic links (sanity check)
         # also getting long chains of symbolic links
-        for symlink in self.__symlink_to_target:
-            if not os.path.islink(symlink):
-                self.__symlink_to_target.pop(symlink)
-            target = self.__symlink_to_target[symlink]
-            path = symlink
-            chain = [symlink]
-            dir_chain = []
-            while (os.path.realpath(path) != os.path.normpath(path)):
-                if not os.path.islink(path):
-                    # we have a directory that is a symbolic link!
-                    common_prefix = os.path.commonprefix([path, os.path.realpath(path)])
-                    sub_dirs = path.replace(common_prefix, '').split(os.sep)
-                    dir_link = common_prefix
-                    while sub_dirs != []:
-                        dir_link = os.path.normpath(os.path.join(dir_link, sub_dirs[0]))
-                        sub_dirs.pop(0)
-                        if os.path.islink(dir_link):
-                            if dir_chain == []:
-                                dir_chain.append(dir_link)
-                            elif dir_chain[-1] != dir_link:
-                                dir_chain.append(None)
-                                dir_chain.append(dir_link)
-                            next_target = os.readlink(dir_link)
-                            if not os.path.isabs(next_target):
-                                next_target = os.path.normpath(os.path.join(os.path.dirname(dir_link), next_target))
-                            dir_chain.append(next_target)
-                            path = os.path.normpath(os.path.join(next_target, os.sep.join(sub_dirs)))
-                            chain.append(None)
-                            chain.append(path)
+        exclude_symlink = []
+        try:
+            for symlink in self.__symlink_to_target:
+                if not os.path.islink(symlink):
+                    exclude_symlink.append(symlink)
+                    continue
+                target = self.__symlink_to_target[symlink]
+                path = symlink
+                chain = [symlink]
+                dir_chain = []
+                while (os.path.realpath(path) != os.path.normpath(path)):
+                    if not os.path.islink(path):
+                        # we have a directory that is a symbolic link!
+                        common_prefix = os.path.commonprefix([path, os.path.realpath(path)])
+                        sub_dirs = path.replace(common_prefix, '').split(os.sep)
+                        dir_link = common_prefix
+                        while sub_dirs != []:
+                            dir_link = os.path.normpath(os.path.join(dir_link, sub_dirs[0]))
+                            sub_dirs.pop(0)
+                            if os.path.islink(dir_link):
+                                if dir_chain == []:
+                                    dir_chain.append(dir_link)
+                                elif dir_chain[-1] != dir_link:
+                                    dir_chain.append(None)
+                                    dir_chain.append(dir_link)
+                                next_target = os.readlink(dir_link)
+                                if not os.path.isabs(next_target):
+                                    next_target = os.path.normpath(os.path.join(os.path.dirname(dir_link), next_target))
+                                dir_chain.append(next_target)
+                                path = os.path.normpath(os.path.join(next_target, os.sep.join(sub_dirs)))
+                                chain.append(None)
+                                chain.append(path)
+                                break
+                        if sub_dirs == []:
+                            print "Something is wrong..."
                             break
-                    if sub_dirs == []:
-                        print "Something is wrong..."
-                        break
-                else:
-                    next_target = os.readlink(path)
-                    if not os.path.isabs(next_target):
-                        next_target = os.path.normpath(os.path.join(os.path.dirname(path), next_target))
-                    chain.append(next_target)
-                    path = next_target
-            if len(chain) < 3:
-                continue
-            if (path != target):
-                print "Something is wrong..."
-                
-            self.__symlink_chain[symlink] = chain
-            if dir_chain != []:
-                self.__symlink_dir[symlink] = dir_chain
+                    else:
+                        next_target = os.readlink(path)
+                        if not os.path.isabs(next_target):
+                            next_target = os.path.normpath(os.path.join(os.path.dirname(path), next_target))
+                        chain.append(next_target)
+                        path = next_target
+                if len(chain) < 3:
+                    continue
+                if (path != target):
+                    print "Something is wrong..."
+                    
+                self.__symlink_chain[symlink] = chain
+                if dir_chain != []:
+                    self.__symlink_dir[symlink] = dir_chain
+        except:
+            reprozip.debug.error('Problem while retrieving symbolic link information: %s' %sys.exc_info()[1])
+            raise Exception
+        
+        for symlink in exclude_symlink:
+            self.__symlink_to_target.pop(symlink)
             
     
     def configure(self):
@@ -519,7 +528,7 @@ class Experiment:
 #                       'child programs: %s' %str(self.__child_programs),
 #                       'child input files: %s' %str(self.__child_input_files),
 #                       'dependencies: %s' %str(self.__dependencies)])
-        
+
         # generate configuration file
         self.__gen_config_file()
         
