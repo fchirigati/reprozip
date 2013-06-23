@@ -80,8 +80,8 @@ Alternatively, you can use the VisTrails workflow to reproduce, vary and explore
 
 For more information about VisTrails, please visit http://www.vistrails.org
 
-MongoDB Considerations
-======================
+MongoDB Configuration Parameters
+================================
 
 ReproZip uses MongoDB in the packing step to keep information about packed experiments. There is no option to use ReproZip in the packing step without MongoDB.
 
@@ -94,7 +94,7 @@ The default settings can be found at ReproZip's configuration file (*$HOME/.repr
 * *dbpath*: specifies a directory for the mongod instance to store its data;
 * *logpath*: specifies a path for the log file;
 * *quiet*: indicates whether MongoDB should limit the amount of output; setting it to True keeps the output significantly smaller;
-* *journaling*: indicated whether journaling is enabled; the default is False.
+* *journaling*: indicates whether journaling is enabled; the default is False.
 
 Acknowledgements
 ================
