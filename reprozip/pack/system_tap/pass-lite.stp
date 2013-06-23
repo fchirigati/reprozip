@@ -77,7 +77,6 @@ probe kernel.function("do_filp_open").return {
   }
 }
 
-
 # Tracing changes in working directory
 probe syscall.chdir.return {
   if ($return >= 0) {
@@ -85,10 +84,6 @@ probe syscall.chdir.return {
     printf("CHDIR||%s\n", user_string($filename))
   }
 }
-
-
-# Margo wanted me to track all reads and writes since many programs
-# actually open files in 'rw' mode
 
 probe syscall.read.return {
   if ($return > 0) {
@@ -197,7 +192,6 @@ probe syscall.fork.return {
 }
 
 probe syscall.execve {
-  # kick-ass code to get the pwd at the time of the execve call :)
   tc = task_current()
   pwd_dentry = @cast(tc, "task_struct")->fs->pwd->dentry
   pwd_mnt = @cast(tc, "task_struct")->fs->pwd->mnt
