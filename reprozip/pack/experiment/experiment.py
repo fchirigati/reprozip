@@ -799,14 +799,24 @@ class Experiment:
 #                    
 #                # other files
 #                else:
-                shutil.copyfile(original_file, rep_file)
+                
+                if os.path.isdir(original_file):
+                    if os.path.exists(rep_file):
+                        shutil.rmtree(rep_file)
+                    shutil.copytree(original_file, rep_file)
+                else:
+                    if os.path.exists(rep_file):
+                        os.remove(rep_file)
+                    shutil.copyfile(original_file, rep_file)
                     
                 if program:
-                    #shutil.copystat(original_file, rep_file)
-                    os.chmod(rep_file, stat.S_IXUSR | stat.S_IXOTH |
-                             stat.S_IXGRP | stat.S_IRUSR | stat.S_IROTH |
-                             stat.S_IRGRP | stat.S_IWUSR | stat.S_IWOTH |
-                             stat.S_IWGRP)
+#                     shutil.copystat(original_file, rep_file)
+#                     os.chmod(rep_file, stat.S_IXUSR | stat.S_IXOTH |
+#                              stat.S_IXGRP | stat.S_IRUSR | stat.S_IROTH |
+#                              stat.S_IRGRP | stat.S_IWUSR | stat.S_IWOTH |
+#                              stat.S_IWGRP)
+                    st = os.stat(original_file)
+                    os.chmod(rep_file, st.st_mode | stat.S_IEXEC)
             except:
                 reprozip.debug.warning('Could not copy "%s": %s' % (original_file, sys.exc_info()[1]))
                 reprozip.debug.warning('Reproducible package will not contain this file.')
@@ -1151,7 +1161,7 @@ class Experiment:
             
             env_values = ':'.join(values)
             if env_values != '':
-                env_var[var] = "'%s'" %env_values.strip("'")
+                env_var[var] = '%s' %env_values.strip("'")
         
         # pwd        
         pwd = os.path.join(self.__user_exp_dir, self.__prov_tree.root.execve_pwd[1:])
