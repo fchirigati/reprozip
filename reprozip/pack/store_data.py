@@ -1,6 +1,6 @@
 ###############################################################################
 ##
-## This file was extensively modified from the Burrito System code.
+## This file was modified from the Burrito System code.
 ## Burrito System Paper:
 ##  - Philip J. Guo and Margo Seltzer. Burrito: Wrapping Your Lab Notebook in
 ##    Computational Infrastructure. In Proceedings of the USENIX Workshop on

@@ -1,6 +1,6 @@
 ###############################################################################
 ##
-## This file was extensively modified from the Burrito System code.
+## This file was modified from the Burrito System code.
 ## Burrito System Paper:
 ##  - Philip J. Guo and Margo Seltzer. Burrito: Wrapping Your Lab Notebook in
 ##    Computational Infrastructure. In Proceedings of the USENIX Workshop on
@@ -10,14 +10,6 @@
 ## This file is part of ReproZip.
 ##
 ###############################################################################
-
-# A super-simple version of PASS, implemented using SystemTap
-# by Philip Guo, 2011-10-31
-
-# Tested on Fedora 14 with this kernel version: 2.6.35.14-103.fc14.x86_64
-
-# Use this command to create a series of 10MB output files:
-#   stap -o /var/log/burrito/stap.out -S 10 pass-lite.stp
 
 # Use a double pipe '||' delimiter for fields since that pattern doesn't
 # seem to appear in filenames
