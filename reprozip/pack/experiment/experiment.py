@@ -944,10 +944,6 @@ class Experiment:
         for dependency in self.__dependencies:
             rep_dependency, in_cp_dir = include_file(dependency, self.__dependencies[dependency])
             
-#         if 'inference' in main_name:
-#             shutil.rmtree(os.path.join(self.__rep_exp_dir, '/usr/lib/python2.7'))
-#             shutil.copytree('/usr/lib/python2.7', os.path.join(self.__rep_exp_dir, '/usr/lib/python2.7'))
-            
         # saving configuration file inside package
         try:
             shutil.copyfile(reprozip.utils.config_path, os.path.join(self.__rep_dir,
