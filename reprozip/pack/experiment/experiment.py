@@ -811,12 +811,12 @@ class Experiment:
                     
                 if program:
 #                     shutil.copystat(original_file, rep_file)
-#                     os.chmod(rep_file, stat.S_IXUSR | stat.S_IXOTH |
-#                              stat.S_IXGRP | stat.S_IRUSR | stat.S_IROTH |
-#                              stat.S_IRGRP | stat.S_IWUSR | stat.S_IWOTH |
-#                              stat.S_IWGRP)
-                    st = os.stat(original_file)
-                    os.chmod(rep_file, st.st_mode | stat.S_IEXEC)
+                    os.chmod(rep_file, stat.S_IXUSR | stat.S_IXOTH |
+                             stat.S_IXGRP | stat.S_IRUSR | stat.S_IROTH |
+                             stat.S_IRGRP | stat.S_IWUSR | stat.S_IWOTH |
+                             stat.S_IWGRP)
+#                     st = os.stat(original_file)
+#                     os.chmod(rep_file, st.st_mode | stat.S_IEXEC)
             except:
                 reprozip.debug.warning('Could not copy "%s": %s' % (original_file, sys.exc_info()[1]))
                 reprozip.debug.warning('Reproducible package will not contain this file.')
@@ -943,6 +943,10 @@ class Experiment:
         # dependencies
         for dependency in self.__dependencies:
             rep_dependency, in_cp_dir = include_file(dependency, self.__dependencies[dependency])
+            
+#         if 'inference' in main_name:
+#             shutil.rmtree(os.path.join(self.__rep_exp_dir, '/usr/lib/python2.7'))
+#             shutil.copytree('/usr/lib/python2.7', os.path.join(self.__rep_exp_dir, '/usr/lib/python2.7'))
             
         # saving configuration file inside package
         try:
@@ -1157,11 +1161,12 @@ class Experiment:
                 if os.path.exists(dep_path):
                     values.append(os.path.join(self.__user_exp_dir, n_value))
                 else:
-                    values.append(value)
+                    if (not os.path.isabs(value)):
+                        values.append(value)
             
             env_values = ':'.join(values)
             if env_values != '':
-                env_var[var] = '%s' %env_values.strip("'")
+                env_var[var] = '\'%s\'' %env_values.replace('\'','\"')
         
         # pwd        
         pwd = os.path.join(self.__user_exp_dir, self.__prov_tree.root.execve_pwd[1:])
@@ -1178,28 +1183,43 @@ class Experiment:
         the experiment.
         """
         
+#         script = ''
+#         
+#         script += 'import os\n'
+#         script += 'import subprocess\n\n'
+#         
+#         script += 'pwd = os.getcwd()\n'
+#         script += 'os.chdir(\'%s\')\n\n' %pwd
+#             
+#         cmd = ''
+#         for i in range(0, len(argv_dict), 1):
+#             if argv_dict[i]['flag']:
+#                 cmd += '%s ' %argv_dict[i]['flag']
+#             if argv_dict[i]['prefix']:
+#                 cmd += '%s' %argv_dict[i]['prefix']
+#             cmd += '%s ' %argv_dict[i]['value']
+#             
+#         script += 'cmd = \"%s\".split()\n' %cmd
+#         script += 'env = %s\n' %str(env_var)
+#         script += 'p = subprocess.Popen(cmd, env=env)\n'
+#         script += 'r = p.wait()\n\n'
+#             
+#         script += 'os.chdir(pwd)'
+        
         script = ''
         
-        script += 'import os\n'
-        script += 'import subprocess\n\n'
-        
-        script += 'pwd = os.getcwd()\n'
-        script += 'os.chdir(\'%s\')\n\n' %pwd
+        script += 'pushd %s\n(' %pwd
+        for var in env_var:
+            script += 'export %s=%s; ' %(var, env_var[var])
             
-        cmd = ''
         for i in range(0, len(argv_dict), 1):
             if argv_dict[i]['flag']:
-                cmd += '%s ' %argv_dict[i]['flag']
+                script += '%s ' %argv_dict[i]['flag']
             if argv_dict[i]['prefix']:
-                cmd += '%s' %argv_dict[i]['prefix']
-            cmd += '%s ' %argv_dict[i]['value']
+                script += '%s' %argv_dict[i]['prefix']
+            script += '%s ' %argv_dict[i]['value']
             
-        script += 'cmd = \"%s\".split()\n' %cmd
-        script += 'env = %s\n' %str(env_var)
-        script += 'p = subprocess.Popen(cmd, env=env)\n'
-        script += 'r = p.wait()\n\n'
-            
-        script += 'os.chdir(pwd)'
+        script += ')\npopd'
             
         script_file = reprozip.utils.exec_path.replace(reprozip.utils.rep_dir_var,
                                                        self.__rep_dir)

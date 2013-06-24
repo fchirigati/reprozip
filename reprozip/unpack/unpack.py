@@ -123,8 +123,8 @@ def unpack(args):
                                 os.path.normpath(wdir))
     
     # adding python ref
-    ref = '#!%s\n\n' %reprozip.utils.executable_in_path('python')[1]
-    contents = ref + contents
+#     ref = '#!%s\n\n' %reprozip.utils.executable_in_path('python')[1]
+#     contents = ref + contents
     
     f = open(script_file, 'w')
     f.write(contents)
