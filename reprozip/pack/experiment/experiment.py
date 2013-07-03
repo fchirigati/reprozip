@@ -38,6 +38,7 @@ from reprozip.pack.tree.provenance_tree import Node, ProvenanceTree
 from reprozip.install.utils import guess_sudo
 import reprozip.debug
 import reprozip.utils
+import reprozip.install
 import shutil
 import stat
 import pickle
