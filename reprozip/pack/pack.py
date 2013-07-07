@@ -88,6 +88,7 @@ def pack(args):
                 
                 main_tracer.store_process_data(port=mongod.port)
             except:
+                reprozip.debug.error(sys.exc_info()[1])
                 main_tracer.stop_tracer()
                 mongod.stop()
                 sys.exit(1)
@@ -101,6 +102,7 @@ def pack(args):
                                                     collection_name = 'process_trace',
                                                     port            = mongod.port)
         except:
+            reprozip.debug.error(sys.exc_info()[1])
             mongod.stop()
             sys.exit(1)
         

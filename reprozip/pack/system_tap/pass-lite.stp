@@ -56,6 +56,127 @@ probe syscall.open.return {
   }
 }
 
+# openat is identical to open, but we also need to get the file descriptor
+# code to get filename from fd taken from:
+# http://sourceware-org.1504.n7.nabble.com/Get-filename-from-fd-td175773.html
+probe syscall.openat.return {
+  filename = user_string($filename)
+
+  # only trace files that were actually successfully opened!
+  if ($return >= 0) {
+    fd = $return
+
+    print_header()
+
+    rw_flags = $flags & 0x3
+    
+    # getting pathname from dfd, if necessary
+    file = NULL
+    if (_dfd_str($dfd) != "AT_FDCWD") {
+      file = @cast(task_current(), "task_struct")->files->fdt->fd[$dfd]
+    }
+
+    if (rw_flags == 0x2) { # O_RDWR
+      if (_dfd_str($dfd) == "AT_FDCWD") {
+        printf("OPEN_READWRITE||%s||%d\n", filename, fd)
+      } else {
+        printf("OPEN_AT_READWRITE||%s||%s||%d\n", filename, __file_filename(file), fd)
+      }
+    }
+    else if (rw_flags == 0x1) { # O_WRONLY
+      if (_dfd_str($dfd) == "AT_FDCWD") {
+        printf("OPEN_WRITE||%s||%d\n", filename, fd)
+      } else {
+        printf("OPEN_AT_WRITE||%s||%s||%d\n", filename, __file_filename(file), fd)
+      }
+    }
+    else { # O_RDONLY
+      if (_dfd_str($dfd) == "AT_FDCWD") {
+        printf("OPEN_READ||%s||%d\n", filename, fd)
+      } else {
+        printf("OPEN_AT_READ||%s||%s||%d\n", filename, __file_filename(file), fd)
+      }
+    }
+
+    # delete these entries since this new file has never been read from or written to ...
+    delete reads[pid(), fd]
+    delete writes[pid(), fd]
+  }
+}
+
+# stat, fstat, lstat, fstatat
+probe syscall.stat.return {
+  if ($return >= 0) {
+    filename = user_string($filename)
+    print_header()
+    printf("STAT||%s\n", filename)
+  }
+}
+
+probe syscall.lstat.return {
+  if ($return >= 0) {
+    filename = user_string($filename)
+    print_header()
+    printf("STAT||%s\n", filename)
+  }
+}
+
+probe syscall.fstat.return {
+  if ($return >= 0) {
+    file = @cast(task_current(), "task_struct")->files->fdt->fd[$fd]
+    print_header()
+    printf("STAT||%s\n", __file_filename(file))
+  }
+}
+
+probe syscall.fstatat.return {
+  if ($return >= 0) {
+    filename = user_string($filename)
+    
+    # getting pathname from dfd, if necessary
+    file = NULL
+    if (_dfd_str($dfd) != "AT_FDCWD") {
+      file = @cast(task_current(), "task_struct")->files->fdt->fd[$dfd]
+    }
+
+    print_header()
+    
+    if (_dfd_str($dfd) == "AT_FDCWD") {
+      printf("STAT||%s\n", filename)
+    } else {
+      printf("STAT_AT||%s||%s\n", filename, __file_filename(file))
+    }
+  }
+}
+
+# access, faccessat
+probe syscall.access.return {
+  if ($return >= 0) {
+    filename = user_string($filename)
+    print_header()
+    printf("ACCESS||%s\n", filename)
+  }
+}
+
+probe syscall.faccessat.return {
+  if ($return >= 0) {
+    filename = user_string($filename)
+    
+    # getting pathname from dfd, if necessary
+    file = NULL
+    if (_dfd_str($dfd) != "AT_FDCWD") {
+      file = @cast(task_current(), "task_struct")->files->fdt->fd[$dfd]
+    }
+
+    print_header()
+    
+    if (_dfd_str($dfd) == "AT_FDCWD") {
+      printf("ACCESS||%s\n", filename)
+    } else {
+      printf("ACCESS_AT||%s||%s\n", filename, __file_filename(file))
+    }
+  }
+}
 
 # Tracing this function allows you to get ABSOLUTE PATHS to the opened files
 # Code taken from: http://blog.gmane.org/gmane.linux.systemtap/month=20111001
@@ -105,22 +226,58 @@ probe syscall.write.return {
   }
 }
 
-# Symlinks
-#probe syscall.readlink.return {
-#    symlink = user_string($path)
-#    target = user_string_n($buf, $bufsiz)
-#    print_header()
-#    printf("SYMLINK||%s||%s\n", symlink, target)
-#}
+# Symlinks (readlink, readlinkat)
 
-#probe syscall.readlinkat.return {
-#    fd = __int32($dfd)
-#    symlink = user_string($pathname)
-#    target = user_string_n($buf, $bufsiz)
-#    print_header()
-#    printf("SYMLINK||%s||%s\n", symlink, target)
-#}
+probe syscall.readlink.return {
+  if ($return > 0) {
+    symlink = user_string($path)
+    target = user_string_n($buf, $bufsiz)
+    
+    print_header()
+    printf("SYMLINK||%s||%s\n", symlink, target)
+  }
+}
 
+probe syscall.readlinkat.return {
+  if ($return > 0) {
+    symlink = user_string($pathname)
+    target = user_string_n($buf, $bufsiz)
+    
+    # getting pathname from dfd, if necessary
+    file = NULL
+    if (_dfd_str($dfd) != "AT_FDCWD") {
+      file = @cast(task_current(), "task_struct")->files->fdt->fd[$dfd]
+    }
+    
+    print_header()
+    
+    if (_dfd_str($dfd) == "AT_FDCWD") {
+      printf("SYMLINK||%s||%s\n", symlink, target)
+    } else {
+      printf("SYMLINK_AT||%s||%s||%s\n", symlink, __file_filename(file), target)
+    }
+  }
+}
+
+# truncate, ftruncate
+
+probe syscall.truncate.return {
+  if ($return >= 0) {
+    filename = user_string($path)
+    
+    print_header()
+    printf("TRUNCATE||%s\n", filename)
+  }
+}
+
+probe syscall.ftruncate.return {
+  if ($return >= 0) {
+    file = @cast(task_current(), "task_struct")->files->fdt->fd[$fd]
+    
+    print_header()
+    printf("TRUNCATE||%s\n", __file_filename(file))
+  }
+}
 
 # issue a MMAP_READ or MMAP_WRITE event based on whether the 'prot'
 # argument is PROT_READ or PROT_WRITE

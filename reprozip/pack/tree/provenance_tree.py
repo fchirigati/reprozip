@@ -61,6 +61,7 @@ class Node:
         self.__execve_env = {}
         self.__files_read = []
         self.__files_written = []
+        self.__dirs = []
         
         # tree information
         self.__id = None
@@ -90,6 +91,9 @@ class Node:
         
         # mapping from symbolic links to target
         self.__symlink_to_target = {}
+
+    def get_dirs(self):
+        return self.__dirs
 
 
     def get_execve_env(self):
@@ -255,6 +259,12 @@ class Node:
             
         # output files
         self.retrieve_output()
+        
+    
+    def set_dirs(self, value):
+        for i in range(len(value)):
+            filename = os.path.normpath(str(value[i]['dirname']))
+            self.__dirs.append(filename)
 
 
     def set_id(self, value):
@@ -395,6 +405,15 @@ class Node:
             self.__symlink_to_target[symlink] = symlink_to_target[symlink]
             
             
+    def add_dirs(self, dirs):
+        """
+        Method used to add more directories.
+        """
+        
+        self.__dirs += dirs
+        self.__dirs = list(set(self.__dirs))
+            
+            
     def add_env(self, env_dict):
         """
         Method used to add additional environment variables not captured
@@ -420,6 +439,7 @@ class Node:
     dependencies = property(get_dependencies, None, None, None)
     symlink_to_target = property(get_symlink_to_target, set_symlink_to_target, None, None)
     execve_env = property(get_execve_env, set_execve_env, None, None)
+    dirs = property(get_dirs, set_dirs, None, None)
 
 
 class ProvenanceTree:
@@ -515,12 +535,14 @@ class ProvenanceTree:
         
         files_read = []
         files_written = []
+        dirs = []
         symlink_to_target = {}
         execve_env = {}
         for id in self.__nodes:
             if id != 0:                
                 files_read += self.__nodes[id].files_read
                 files_written += self.__nodes[id].files_written
+                dirs += self.__nodes[id].dirs
                 
                 node_execve_env = self.__nodes[id].execve_env
                 for env in node_execve_env:
@@ -534,6 +556,7 @@ class ProvenanceTree:
         self.__nodes[0].add_files_read(list(set(files_read)))
         self.__nodes[0].add_files_written(list(set(files_written)))
         self.__nodes[0].add_targets(symlink_to_target)
+        self.__nodes[0].add_dirs(dirs)
         self.__nodes[0].add_env(execve_env)
 
 

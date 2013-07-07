@@ -14,6 +14,7 @@
 import os
 import sys
 from copy import deepcopy
+import posix
 
 import reprozip.debug
 from reprozip.utils import *
@@ -26,6 +27,7 @@ IGNORE_DIRS = ['/dev/', '/proc/', '/sys/', '/tmp/']
 FIELD_DELIMITER = '||'
 
 OPEN_VARIANTS = ('OPEN_READ', 'OPEN_WRITE', 'OPEN_READWRITE')
+OPEN_AT_VARIANTS = ('OPEN_AT_READ', 'OPEN_AT_WRITE', 'OPEN_AT_READWRITE')
 RW_VARIANTS   = ('READ', 'WRITE', 'MMAP_READ', 'MMAP_WRITE', 'MMAP_READWRITE')
 
 # if multiple file read/write entries occur within this amount of time,
@@ -70,15 +72,41 @@ def parse_raw_pass_lite_line(line):
         assert len(rest) == 2
         entry.filename = rest[0]
         entry.fd = int(rest[1])
+        
+    elif syscall_name in OPEN_AT_VARIANTS:
+        assert len(rest) == 3
+        entry.filename = rest[0]
+        entry.d_filename = rest[1]
+        entry.fd = int(rest[2])
     
     elif syscall_name == 'OPEN_ABSPATH':
         assert len(rest) == 1
         entry.filename_abspath = rest[0]
         assert entry.filename_abspath[0] == os.sep # absolute path check
+        
+    elif syscall_name in ('STAT','ACCESS', 'TRUNCATE'):
+        assert len(rest) == 1
+        entry.filename = rest[0]
+        
+    elif syscall_name in ('STAT_AT','ACCESS_AT'):
+        assert len(rest) == 2
+        entry.filename = rest[0]
+        entry.d_filename = rest[1]
     
     elif syscall_name in RW_VARIANTS or syscall_name == 'CLOSE':
         assert len(rest) == 1
         entry.fd = int(rest[0])
+        
+    elif syscall_name == 'SYMLINK':
+        assert len(rest) == 2
+        entry.symlink = rest[0]
+        entry.target = rest[1]
+        
+    elif syscall_name == 'SYMLINK_AT':
+        assert len(rest) == 3
+        entry.symlink = rest[0]
+        entry.d_filename = rest[1]
+        entry.target = rest[2]
     
     elif syscall_name == 'PIPE':
         assert len(rest) == 2
@@ -162,6 +190,9 @@ class ProcessPhase:
         self.files_read = {}
         self.files_written = {}
         
+        # directories accessed
+        self.dirs = {}
+        
         # mapping from symbolic link to target
         # symlinks[symlink] = target
         self.symlinks = {}
@@ -176,6 +207,7 @@ class ProcessPhase:
             assert not self.files_read
             assert not self.files_written
             assert not self.files_renamed
+            assert not self.dirs
             assert not self.symlinks
             return True
         else:
@@ -213,7 +245,14 @@ class ProcessPhase:
         if filename not in self.files_written:
             self.files_written[filename] = []
         self._insert_coalesced_time(self.files_written[filename], timestamp)
+        
     
+    def add_dir(self, proc_name, timestamp, filename):
+        self._set_or_confirm_name(proc_name)
+        if filename not in self.dirs:
+            self.dirs[filename] = []
+        self._insert_coalesced_time(self.dirs[filename], timestamp)
+        
     
     def add_file_rename(self, proc_name, timestamp, old_filename, new_filename):
         self._set_or_confirm_name(proc_name)
@@ -299,6 +338,14 @@ class ProcessPhase:
             else:
                 assert len(v) == 1
                 serialized_files_written.append(dict(filename=k, timestamp=encode_datetime(v[0])))
+                
+        serialized_dirs = []
+        for (k,v) in self.dirs.iteritems():
+            if len(v) > 1:
+                serialized_dirs.append(dict(dirname=k, timestamp=[encode_datetime(e) for e in v]))
+            else:
+                assert len(v) == 1
+                serialized_dirs.append(dict(dirname=k, timestamp=encode_datetime(v[0])))
         
         serialized_renames = []
         for (t, old, new) in sorted(self.files_renamed):
@@ -321,6 +368,7 @@ class ProcessPhase:
         ret['files_read'] = serialized_files_read
         ret['files_written'] = serialized_files_written
         ret['files_renamed'] = serialized_renames
+        ret['directories'] = serialized_dirs
         ret['symlinks'] = serialized_symlinks
         
         return ret  
@@ -512,7 +560,7 @@ class Process:
         assert not self.exited # don't allow ANY more entries after you've exited
         
         
-        if entry.syscall_name in OPEN_VARIANTS:
+        if (entry.syscall_name in OPEN_VARIANTS):
             # OPEN_ABSPATH always preceeds another OPEN_* entry,
             # or something is wrong ...
             assert self.prev_entry.syscall_name == 'OPEN_ABSPATH'
@@ -573,6 +621,122 @@ class Process:
                         self.phases[-1].add_symlink(*args_symlink)
             else:
                 assert False
+                
+        elif (entry.syscall_name in OPEN_AT_VARIANTS):
+            assert self.prev_entry.syscall_name == 'OPEN_ABSPATH'
+            filename_abspath = os.path.normpath(self.prev_entry.filename_abspath)
+            
+            if entry.fd in self.opened_files:
+                print >> sys.stderr, "WARNING: On OPEN, fd", entry.fd, "is already being used by", self.opened_files[entry.fd]
+            
+            # Resolving symbolic links
+            symlink = False
+            filename = os.path.normpath(entry.filename)
+            if not os.path.isabs(filename):
+                d_filename = os.path.normpath(entry.d_filename)
+                if not os.path.isabs(d_filename):
+                    return False
+                filename = os.path.normpath(os.path.join(d_filename, filename))
+            if (filename != filename_abspath):
+                # we have a symlink!
+                symlink = True
+            
+            ignore = False
+            for d in IGNORE_DIRS:
+                if filename_abspath.startswith(d):
+                    ignore = True
+                    break
+                
+            args = (entry.proc_name, entry.timestamp, filename)
+            args_symlink = (entry.proc_name, filename, filename_abspath)
+            
+            if entry.syscall_name == 'OPEN_AT_READ':
+                self.opened_files[entry.fd] = (filename_abspath, 'r')
+                if not ignore:
+                    self.phases[-1].add_file_read(*args)
+                    if symlink:
+                        self.phases[-1].add_symlink(*args_symlink)
+            elif entry.syscall_name == 'OPEN_AT_WRITE':
+                self.opened_files[entry.fd] = (filename_abspath, 'w')
+                if not ignore:
+                    self.phases[-1].add_file_write(*args)
+                    if symlink:
+                        self.phases[-1].add_symlink(*args_symlink)
+            elif entry.syscall_name == 'OPEN_AT_READWRITE':
+                self.opened_files[entry.fd] = (filename_abspath, 'rw')
+                if not ignore:
+                    self.phases[-1].add_file_read(*args)
+                    self.phases[-1].add_file_write(*args)
+                    if symlink:
+                        self.phases[-1].add_symlink(*args_symlink)
+            else:
+                assert False
+                
+        elif entry.syscall_name == 'SYMLINK':
+            symlink = os.path.normpath(entry.symlink)
+            target = os.path.normpath(entry.target)
+            if os.path.isabs(symlink):
+                args = (entry.proc_name, entry.timestamp, symlink)
+                # file
+                if not os.path.isdir(symlink):
+                    self.phases[-1].add_file_read(*args)
+                    if os.path.isabs(target):
+                        args_symlink = (entry.proc_name, symlink, target)
+                        self.phases[-1].add_symlink(*args_symlink)
+                # dir
+                else:
+                    self.phases[-1].add_dir(*args)
+                    
+        elif entry.syscall_name == 'SYMLINK_AT':
+            symlink = os.path.normpath(entry.symlink)
+            target = os.path.normpath(entry.target)
+            if not os.path.isabs(symlink):
+                d_filename = os.path.normpath(entry.d_filename)
+                if not os.path.isabs(d_filename):
+                    return False
+                symlink = os.path.normpath(os.path.join(d_filename, symlink))
+            args = (entry.proc_name, entry.timestamp, symlink)
+            # file
+            if not os.path.isdir(symlink):
+                self.phases[-1].add_file_read(*args)
+                if os.path.isabs(target):
+                    args_symlink = (entry.proc_name, symlink, target)
+                    self.phases[-1].add_symlink(*args_symlink)
+            # dir
+            else:
+                self.phases[-1].add_dir(*args)
+                
+        elif entry.syscall_name in ('STAT', 'ACCESS', 'TRUNCATE'):
+            filename = os.path.normpath(entry.filename)
+            if os.path.isabs(filename):
+                args = (entry.proc_name, entry.timestamp, filename)
+                # file
+                if not os.path.isdir(filename):
+                    self.phases[-1].add_file_read(*args)
+                    if os.path.islink(filename):
+                        args_symlink = (entry.proc_name, filename, os.path.realpath(filename))
+                        self.phases[-1].add_symlink(*args_symlink)
+                # dir
+                else:
+                    self.phases[-1].add_dir(*args)
+                    
+        elif entry.syscall_name in ('STAT_AT', 'ACCESS_AT'):
+            filename = os.path.normpath(entry.filename)
+            if not os.path.isabs(filename):
+                d_filename = os.path.normpath(entry.d_filename)
+                if not os.path.isabs(d_filename):
+                    return False
+                filename = os.path.normpath(os.path.join(d_filename, filename))
+            args = (entry.proc_name, entry.timestamp, filename)
+            # file
+            if not os.path.isdir(filename):
+                self.phases[-1].add_file_read(*args)
+                if os.path.islink(filename):
+                    args_symlink = (entry.proc_name, filename, os.path.realpath(filename))
+                    self.phases[-1].add_symlink(*args_symlink)
+            # dir
+            else:
+                self.phases[-1].add_dir(*args)
         
         elif entry.syscall_name == 'DUP' or entry.syscall_name == 'DUP2':
             # 'close' dst_fd if necessary

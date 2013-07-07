@@ -75,6 +75,9 @@ class Experiment:
         # output files
         self.__output_files = []
         
+        # directories
+        self.__dirs = {}
+        
         # configuration files
         self.__config_files = {}
         
@@ -256,6 +259,8 @@ class Experiment:
         
         execve_env = str(exec_wf['phases'][main_phase_index]['execve_env'])
         
+        dirs = exec_wf['phases'][main_phase_index]['directories'] or [] # list of dictionaries
+        
         files_read = exec_wf['phases'][main_phase_index]['files_read'] or [] # list of dictionaries
         
         files_written = exec_wf['phases'][main_phase_index]['files_written'] or [] # list of dictionaries
@@ -270,6 +275,7 @@ class Experiment:
         root_node.set_execve_env(execve_env)
         root_node.set_files_read(files_read)
         root_node.set_files_written(files_written)
+        root_node.set_dirs(dirs)
         root_node.set_symlink_to_target(symlinks)
         
 #        self.verbose_(['main execve_argv: %s' %root_node.execve_argv,
@@ -299,6 +305,8 @@ class Experiment:
                 
                 files_written = exec_wf['phases'][i]['files_written'] or []
                 
+                dirs = exec_wf['phases'][i]['directories'] or []
+                
                 symlinks = exec_wf['phases'][i]['symlinks'] or []
                 
                 if execve_argv == 'None':
@@ -313,6 +321,7 @@ class Experiment:
                 node.set_execve_env(execve_env)
                 node.set_files_read(files_read)
                 node.set_files_written(files_written)
+                node.set_dirs(dirs)
                 node.set_symlink_to_target(symlinks)
                 
                 self.__prov_tree.add_node(node)
@@ -347,6 +356,9 @@ class Experiment:
         # output files from main program
         self.__output_files = dict((output_file, None) for output_file in self.__prov_tree.root.output_files)
         
+        # directories
+        self.__dirs = dict((dir, None) for dir in self.__prov_tree.root.dirs)
+        
         # mapping from symbolic links to target files
         self.__symlink_to_target = self.__prov_tree.root.symlink_to_target
         
@@ -376,12 +388,12 @@ class Experiment:
         self.__child_programs = dict((program, None) for program in child_programs)
         
         # function to remove duplicates of a list
-        def remove_duplicates(l):
-           no_duplicates = []
-           for e in l:
-               if e not in no_duplicates:
-                   no_duplicates.append(e)
-           return no_duplicates
+#         def remove_duplicates(l):
+#            no_duplicates = []
+#            for e in l:
+#                if e not in no_duplicates:
+#                    no_duplicates.append(e)
+#            return no_duplicates
         
         # assuring the symbolic links are really symbolic links (sanity check)
         # also getting long chains of symbolic links
@@ -490,7 +502,10 @@ class Experiment:
         # child input files
         for input_file in self.__child_input_files:
             add_rep_file(input_file, self.__child_input_files)
-        
+            
+        # directories
+        for dir in self.__dirs:
+            add_rep_file(dir, self.__dirs)
                     
         # trying to identify implicit input files among dependencies
         # a dependency is considered an implicit input file if it is
@@ -810,6 +825,9 @@ class Experiment:
                         os.remove(rep_file)
                     shutil.copyfile(original_file, rep_file)
                     
+                st = os.stat(original_file)
+                os.chmod(rep_file, st.st_mode)
+                    
                 if program:
 #                     shutil.copystat(original_file, rep_file)
                     os.chmod(rep_file, stat.S_IXUSR | stat.S_IXOTH |
@@ -944,6 +962,17 @@ class Experiment:
         # dependencies
         for dependency in self.__dependencies:
             rep_dependency, in_cp_dir = include_file(dependency, self.__dependencies[dependency])
+            
+        # directories - making sure they exist
+        for dir in self.__dirs:
+            rep_dir = self.__dirs[dir]
+            rep_dir = os.path.normpath(rep_dir.replace(reprozip.utils.rep_dir_var,
+                                                       self.__rep_dir))
+            if not os.path.exists(rep_dir):
+                os.makedirs(rep_dir)
+                
+                st = os.stat(dir)
+                os.chmod(rep_dir, st.st_mode)
             
         # saving configuration file inside package
         try:
@@ -1902,6 +1931,8 @@ class Experiment:
                 
                 files_written = exec_wf['phases'][i]['files_written'] or [] # list of dictionaries
                 
+                dirs = exec_wf['phases'][i]['directories'] or [] # list of dictionaries
+                
                 symlinks = exec_wf['phases'][i]['symlinks'] or [] # list of dictionaries
     
 #                if execve_argv == 'None':
@@ -1915,14 +1946,15 @@ class Experiment:
                 node.set_execve_env(execve_env)
                 node.set_files_read(files_read)
                 node.set_files_written(files_written)
+                node.set_dirs(dirs)
                 node.set_symlink_to_target(symlinks)
-            
+                
                 # child processes are connected to the first phase
                 if i == 0:
                     main_id = self.__prov_tree.add_node(node)
                 else:
                     c_id = self.__prov_tree.add_node(node)
-                    
+                
             # a process may not have phases, but it is still important to
             # consider it, since the experiment may need executions
             # from its child processes
