@@ -80,6 +80,11 @@ Alternatively, you can use the VisTrails workflow to reproduce, vary and explore
 
 For more information about VisTrails, please visit http://www.vistrails.org
 
+Using ReproZip with Virtual Machines
+====================================
+
+One of the limitations of ReproZip is that the original environment E and the environment E' where the experiment will be reproduced need to be compatible, i.e., they need to have a similar hardware architecture and Linux kernel. Of course, this is not often the case. In these situations, you may create a virtual machine with an environment similar to E, use ReproZip to unpack your experiment in the virtual machine, and send this virtual machine to whoever wants to reproduce your experiment. Voila! ReproZip just made it easier for you to port your experiment to a virtual machine!
+
 MongoDB Configuration Parameters
 ================================
 

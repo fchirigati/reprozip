@@ -18,7 +18,9 @@ setup(
       entry_points = {
                       'console_scripts': [
                                           'reprozip = reprozip:run',
-                                          'reprozip-dep = reprozip.install.dependencies:install_dependencies'
+                                          'reprozip-dep = reprozip.install.dependencies:install_dependencies',
+                                          'reprozip-clean-stap = reprozip.install.clean:clean_stap',
+                                          'reprozip-clean-mongodb = reprozip.install.clean:clean_mongodb'
                                           ]
                       },
       classifiers = [

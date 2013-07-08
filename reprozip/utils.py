@@ -86,6 +86,11 @@ mongodb_logpath = os.path.join(mongodb_dbpath, 'mongodb.log')
 mongodb_quiet = 'True'
 mongodb_journaling = 'False'
 
+# names in the database
+mongodb_database = 'reprozip_db'
+mongodb_collection = 'process_trace'
+mongodb_session_collection = 'session_status'
+
 def executable_in_path(executable):
     """
     Checks if executable is in PATH.

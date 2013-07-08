@@ -105,8 +105,8 @@ def pack(args):
         # retrieving data
         try:
             reprozip.debug.verbose(args['verbose'], 'Starting retrieval of experiment data...')
-            rep_experiment.retrieve_experiment_data(db_name         = 'reprozip_db',
-                                                    collection_name = 'process_trace',
+            rep_experiment.retrieve_experiment_data(db_name         = reprozip.utils.mongodb_database,
+                                                    collection_name = reprozip.utils.mongodb_collection,
                                                     port            = mongod.port)
         except:
             mongod.stop()

@@ -72,13 +72,15 @@ def test_stap():
     Function used to test SystemTap.
     """
     
-    p = subprocess.Popen(['sudo','stap','-ve','probe begin { log("hello world") exit () }'])
+    sudo = reprozip.install.utils.guess_sudo()
+    
+    p = subprocess.Popen([sudo,'stap','-ve','probe begin { log("hello world") exit () }'])
     returncode = p.wait()
     
     if (returncode != 0):
         return False
     
-    p = subprocess.Popen(['sudo','stap','-v', '-e','probe vfs.read {printf(\"read performed\\n\"); exit()}'])
+    p = subprocess.Popen([sudo,'stap','-v', '-e','probe vfs.read {printf(\"read performed\\n\"); exit()}'])
     returncode = p.wait()
     
     if (returncode != 0):
