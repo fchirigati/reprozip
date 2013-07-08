@@ -74,6 +74,7 @@ def pack(args):
         rep_experiment.command_line_info = args['command']
         
         # initializing mongod instance
+        reprozip.debug.verbose(args['verbose'], 'Initializing MongoDB instance...')
         mongod = Mongod()
         mongod.run()
             
@@ -82,13 +83,18 @@ def pack(args):
                                  pass_lite   = PASS_LITE)
             
             try:
+                reprozip.debug.verbose(args['verbose'], 'Initializing tracer...')
                 main_tracer.run_tracer()
+                
                 rep_experiment.execute(args['wdir'], args['env'])
+                
+                reprozip.debug.verbose(args['verbose'], 'Stopping tracer...')
+                #main_tracer.check_tracer()
                 main_tracer.stop_tracer()
                 
+                reprozip.debug.verbose(args['verbose'], 'Storing provenance in MongoDB...')
                 main_tracer.store_process_data(port=mongod.port)
             except:
-                reprozip.debug.error(sys.exc_info()[1])
                 main_tracer.stop_tracer()
                 mongod.stop()
                 sys.exit(1)
@@ -98,15 +104,16 @@ def pack(args):
             
         # retrieving data
         try:
+            reprozip.debug.verbose(args['verbose'], 'Starting retrieval of experiment data...')
             rep_experiment.retrieve_experiment_data(db_name         = 'reprozip_db',
                                                     collection_name = 'process_trace',
                                                     port            = mongod.port)
         except:
-            reprozip.debug.error(sys.exc_info()[1])
             mongod.stop()
             sys.exit(1)
         
         # stopping mongod instance
+        reprozip.debug.verbose(args['verbose'], 'Stopping MongoDB instance...')
         mongod.stop()
         
         # configuring

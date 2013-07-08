@@ -84,7 +84,7 @@ def parse_raw_pass_lite_line(line):
         entry.filename_abspath = rest[0]
         assert entry.filename_abspath[0] == os.sep # absolute path check
         
-    elif syscall_name in ('STAT','ACCESS', 'TRUNCATE'):
+    elif syscall_name in ('STAT', 'ACCESS', 'TRUNCATE'):
         assert len(rest) == 1
         entry.filename = rest[0]
         
@@ -98,9 +98,10 @@ def parse_raw_pass_lite_line(line):
         entry.fd = int(rest[0])
         
     elif syscall_name == 'SYMLINK':
-        assert len(rest) == 2
+        assert len(rest) == 3
         entry.symlink = rest[0]
         entry.target = rest[1]
+        entry.pwd = rest[2]
         
     elif syscall_name == 'SYMLINK_AT':
         assert len(rest) == 3
@@ -364,6 +365,8 @@ class ProcessPhase:
             serialized_renames = None
         if not serialized_symlinks:
             serialized_symlinks = None
+        if not serialized_dirs:
+            serialized_dirs = None
         
         ret['files_read'] = serialized_files_read
         ret['files_written'] = serialized_files_written
@@ -675,17 +678,24 @@ class Process:
         elif entry.syscall_name == 'SYMLINK':
             symlink = os.path.normpath(entry.symlink)
             target = os.path.normpath(entry.target)
-            if os.path.isabs(symlink):
-                args = (entry.proc_name, entry.timestamp, symlink)
-                # file
-                if not os.path.isdir(symlink):
-                    self.phases[-1].add_file_read(*args)
-                    if os.path.isabs(target):
-                        args_symlink = (entry.proc_name, symlink, target)
-                        self.phases[-1].add_symlink(*args_symlink)
-                # dir
-                else:
-                    self.phases[-1].add_dir(*args)
+            pwd = os.path.normpath(entry.pwd)
+            if not os.path.isabs(symlink):
+                if not os.path.isabs(pwd):
+                    return False
+                symlink = os.path.join(pwd, symlink)
+                if not os.path.exists(symlink):
+                    return False
+            args = (entry.proc_name, entry.timestamp, symlink)
+            # file
+            if not os.path.isdir(symlink):
+                self.phases[-1].add_file_read(*args)
+                if not os.path.isabs(target):
+                    target = os.path.realpath(symlink)
+                args_symlink = (entry.proc_name, symlink, target)
+                self.phases[-1].add_symlink(*args_symlink)
+            # dir
+            else:
+                self.phases[-1].add_dir(*args)
                     
         elif entry.syscall_name == 'SYMLINK_AT':
             symlink = os.path.normpath(entry.symlink)
@@ -695,20 +705,23 @@ class Process:
                 if not os.path.isabs(d_filename):
                     return False
                 symlink = os.path.normpath(os.path.join(d_filename, symlink))
+                if not os.path.exists(symlink):
+                    return False
             args = (entry.proc_name, entry.timestamp, symlink)
             # file
             if not os.path.isdir(symlink):
                 self.phases[-1].add_file_read(*args)
-                if os.path.isabs(target):
-                    args_symlink = (entry.proc_name, symlink, target)
-                    self.phases[-1].add_symlink(*args_symlink)
+                if not os.path.isabs(target):
+                    target = os.path.realpath(symlink)
+                args_symlink = (entry.proc_name, symlink, target)
+                self.phases[-1].add_symlink(*args_symlink)
             # dir
             else:
                 self.phases[-1].add_dir(*args)
                 
         elif entry.syscall_name in ('STAT', 'ACCESS', 'TRUNCATE'):
             filename = os.path.normpath(entry.filename)
-            if os.path.isabs(filename):
+            if os.path.isabs(filename) and os.path.exists(filename):
                 args = (entry.proc_name, entry.timestamp, filename)
                 # file
                 if not os.path.isdir(filename):

@@ -140,22 +140,27 @@ class Provenance:
     def index_pass_lite_logs(self):
     
         entries = self.gen_entries_from_multifile_log()
-        for pl_entry in entries:
-            if pl_entry.pid not in self.pid_to_active_processes:
-                # remember, creating a new process adds it to
-                # the pid_to_active_processes dictionary
-                p = Process(pl_entry.pid, pl_entry.ppid, pl_entry.uid,
-                            pl_entry.timestamp, self.pid_to_active_processes)
-                assert self.pid_to_active_processes[pl_entry.pid] == p # sanity check
-            else:
-                p = self.pid_to_active_processes[pl_entry.pid]
-            
-            is_exited = p.add_entry(pl_entry)
-            if is_exited:
-                self.handle_process_exit_event(p)
         
-        for p in self.pid_to_active_processes.itervalues():
-            self.save_tagged_db_entry(self.proc_col, p.serialize())
+        try:
+            for pl_entry in entries:
+                if pl_entry.pid not in self.pid_to_active_processes:
+                    # remember, creating a new process adds it to
+                    # the pid_to_active_processes dictionary
+                    p = Process(pl_entry.pid, pl_entry.ppid, pl_entry.uid,
+                                pl_entry.timestamp, self.pid_to_active_processes)
+                    assert self.pid_to_active_processes[pl_entry.pid] == p # sanity check
+                else:
+                    p = self.pid_to_active_processes[pl_entry.pid]
+                
+                is_exited = p.add_entry(pl_entry)
+                if is_exited:
+                    self.handle_process_exit_event(p)
+            
+            for p in self.pid_to_active_processes.itervalues():
+                self.save_tagged_db_entry(self.proc_col, p.serialize())
+        except:
+            reprozip.debug.error('Error while parsing entries: %s' %sys.exc_info()[1])
+            raise Exception
 
 
     def do_index(self):
@@ -209,7 +214,6 @@ class Provenance:
         try:
             self.do_index()
         except:
-            reprozip.debug.error('Problem while storing the data: %s' %sys.exc_info()[1])
             raise Exception
         
         # exiting

@@ -106,6 +106,11 @@ probe syscall.openat.return {
 
 # stat, fstat, lstat, fstatat
 probe syscall.stat.return {
+  #tc = task_current()
+  #pwd_dentry = @cast(tc, "task_struct")->fs->pwd->dentry
+  #pwd_mnt = @cast(tc, "task_struct")->fs->pwd->mnt
+  #pwd_path = task_dentry_path(tc, pwd_dentry, pwd_mnt)
+  
   if ($return >= 0) {
     filename = user_string($filename)
     print_header()
@@ -114,6 +119,11 @@ probe syscall.stat.return {
 }
 
 probe syscall.lstat.return {
+  #tc = task_current()
+  #pwd_dentry = @cast(tc, "task_struct")->fs->pwd->dentry
+  #pwd_mnt = @cast(tc, "task_struct")->fs->pwd->mnt
+  #pwd_path = task_dentry_path(tc, pwd_dentry, pwd_mnt)
+  
   if ($return >= 0) {
     filename = user_string($filename)
     print_header()
@@ -122,6 +132,11 @@ probe syscall.lstat.return {
 }
 
 probe syscall.fstat.return {
+  #tc = task_current()
+  #pwd_dentry = @cast(tc, "task_struct")->fs->pwd->dentry
+  #pwd_mnt = @cast(tc, "task_struct")->fs->pwd->mnt
+  #pwd_path = task_dentry_path(tc, pwd_dentry, pwd_mnt)
+  
   if ($return >= 0) {
     file = @cast(task_current(), "task_struct")->files->fdt->fd[$fd]
     print_header()
@@ -130,6 +145,11 @@ probe syscall.fstat.return {
 }
 
 probe syscall.fstatat.return {
+  #tc = task_current()
+  #pwd_dentry = @cast(tc, "task_struct")->fs->pwd->dentry
+  #pwd_mnt = @cast(tc, "task_struct")->fs->pwd->mnt
+  #pwd_path = task_dentry_path(tc, pwd_dentry, pwd_mnt)
+  
   if ($return >= 0) {
     filename = user_string($filename)
     
@@ -151,6 +171,11 @@ probe syscall.fstatat.return {
 
 # access, faccessat
 probe syscall.access.return {
+  #tc = task_current()
+  #pwd_dentry = @cast(tc, "task_struct")->fs->pwd->dentry
+  #pwd_mnt = @cast(tc, "task_struct")->fs->pwd->mnt
+  #pwd_path = task_dentry_path(tc, pwd_dentry, pwd_mnt)
+  
   if ($return >= 0) {
     filename = user_string($filename)
     print_header()
@@ -159,6 +184,11 @@ probe syscall.access.return {
 }
 
 probe syscall.faccessat.return {
+  #tc = task_current()
+  #pwd_dentry = @cast(tc, "task_struct")->fs->pwd->dentry
+  #pwd_mnt = @cast(tc, "task_struct")->fs->pwd->mnt
+  #pwd_path = task_dentry_path(tc, pwd_dentry, pwd_mnt)
+  
   if ($return >= 0) {
     filename = user_string($filename)
     
@@ -228,40 +258,57 @@ probe syscall.write.return {
 
 # Symlinks (readlink, readlinkat)
 
-probe syscall.readlink.return {
-  if ($return > 0) {
-    symlink = user_string($path)
-    target = user_string_n($buf, $bufsiz)
+#probe syscall.readlink.return {
+#  tc = task_current()
+#  pwd_dentry = @cast(tc, "task_struct")->fs->pwd->dentry
+#  pwd_mnt = @cast(tc, "task_struct")->fs->pwd->mnt
+#  pwd_path = task_dentry_path(tc, pwd_dentry, pwd_mnt)
+  
+#  if ($return > 0) {
+#    symlink = user_string($path)
+#    #target = user_string_n($buf, $bufsiz)
+#    target = user_string($buf)
     
-    print_header()
-    printf("SYMLINK||%s||%s\n", symlink, target)
-  }
-}
+#    print_header()
+#    printf("SYMLINK||%s||%s||%s\n", symlink, target, pwd_path)
+#  }
+#}
 
-probe syscall.readlinkat.return {
-  if ($return > 0) {
-    symlink = user_string($pathname)
-    target = user_string_n($buf, $bufsiz)
-    
-    # getting pathname from dfd, if necessary
-    file = NULL
-    if (_dfd_str($dfd) != "AT_FDCWD") {
-      file = @cast(task_current(), "task_struct")->files->fdt->fd[$dfd]
-    }
-    
-    print_header()
-    
-    if (_dfd_str($dfd) == "AT_FDCWD") {
-      printf("SYMLINK||%s||%s\n", symlink, target)
-    } else {
-      printf("SYMLINK_AT||%s||%s||%s\n", symlink, __file_filename(file), target)
-    }
-  }
-}
+#probe syscall.readlinkat.return {
+#  if ($return > 0) {
+#    symlink = user_string($pathname)
+#    #target = user_string_n($buf, $bufsiz)
+#    target = user_string($buf)
+#    
+#    # getting pathname from dfd, if necessary
+#    file = NULL
+#    if (_dfd_str($dfd) != "AT_FDCWD") {
+#      file = @cast(task_current(), "task_struct")->files->fdt->fd[$dfd]
+#    }
+#    
+#    print_header()
+#    
+#    if (_dfd_str($dfd) == "AT_FDCWD") {
+#      tc = task_current()
+#      pwd_dentry = @cast(tc, "task_struct")->fs->pwd->dentry
+#      pwd_mnt = @cast(tc, "task_struct")->fs->pwd->mnt
+#      pwd_path = task_dentry_path(tc, pwd_dentry, pwd_mnt)
+#      
+#      printf("SYMLINK||%s||%s||%s\n", symlink, target, pwd_path)
+#    } else {
+#      printf("SYMLINK_AT||%s||%s||%s\n", symlink, __file_filename(file), target)
+#    }
+#  }
+#}
 
 # truncate, ftruncate
 
 probe syscall.truncate.return {
+  #tc = task_current()
+  #pwd_dentry = @cast(tc, "task_struct")->fs->pwd->dentry
+  #pwd_mnt = @cast(tc, "task_struct")->fs->pwd->mnt
+  #pwd_path = task_dentry_path(tc, pwd_dentry, pwd_mnt)
+  
   if ($return >= 0) {
     filename = user_string($path)
     
@@ -271,6 +318,11 @@ probe syscall.truncate.return {
 }
 
 probe syscall.ftruncate.return {
+  #tc = task_current()
+  #pwd_dentry = @cast(tc, "task_struct")->fs->pwd->dentry
+  #pwd_mnt = @cast(tc, "task_struct")->fs->pwd->mnt
+  #pwd_path = task_dentry_path(tc, pwd_dentry, pwd_mnt)
+  
   if ($return >= 0) {
     file = @cast(task_current(), "task_struct")->files->fdt->fd[$fd]
     
@@ -362,6 +414,7 @@ probe syscall.execve {
   mm = @cast(task_current(), "task_struct", "kernel<linux/sched.h>")->mm
   env_name = ""
   env_value = ""
+  exception = 0
   if (mm) {
     env_start = @cast(mm, "mm_struct", "kernel<linux/sched.h>")->env_start
     env_end = @cast(mm, "mm_struct", "kernel<linux/sched.h>")->env_end
@@ -371,6 +424,12 @@ probe syscall.execve {
       env_name = tokenize(cur, "=")
       env_value = tokenize("", "")
       while (len > 0) {
+        if (env_name == "") {
+          exception += 1
+        }
+        if (exception == 50) {
+          break
+        }
         printf("%s&&=&&%s&_&&_&", env_name, env_value)
         env_len = strlen(cur)
         env_start += env_len + 1

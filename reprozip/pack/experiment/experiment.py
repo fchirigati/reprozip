@@ -93,6 +93,9 @@ class Experiment:
         self.__exclude_main_program = []
         self.__exclude_child_programs = []
         
+        # start time of the experiment
+        self.__start_time = None
+        
         # environment variables
         self.__env = {}
         
@@ -181,6 +184,7 @@ class Experiment:
         """
         
         # connecting to Mongo
+        reprozip.debug.verbose(self.verbose, 'Connecting to MongoDB...')
         try:
             conn = pymongo.MongoClient(port=int(port))
         except:
@@ -188,6 +192,7 @@ class Experiment:
             raise Exception
     
         # accessing the database
+        reprozip.debug.verbose(self.verbose, 'Accessing the database...')
         try:
             db = conn[db_name]
         except:
@@ -196,6 +201,7 @@ class Experiment:
             raise Exception
     
         # accessing the collection
+        reprozip.debug.verbose(self.verbose, 'Accessing the collection...')
         try:
             collection = db[collection_name]
         except:
@@ -203,6 +209,7 @@ class Experiment:
             conn.close()
             raise Exception
             
+        reprozip.debug.verbose(self.verbose, 'Querying the collection...')
         l_args = self.command_line_info.split()
         for i in range(len(l_args)):
             l_args[i] = '\"' + l_args[i] + '\"'
@@ -212,7 +219,7 @@ class Experiment:
                                   {'$regex': n_argument + '.*' }})
             
         # sorting the results
-        cursor = cursor.sort('exit_time', pymongo.DESCENDING)
+        cursor = cursor.sort('creation_time', pymongo.DESCENDING)
         
         # getting one record (assuming that the most recent record is the valid one)
         # also, if there was an error with the execution, the record is discarded
@@ -223,20 +230,15 @@ class Experiment:
             raise Exception
         
         exec_wf = cursor[0]
-#        it = 1
-#        while (exec_wf['exit_code'] != 0):
-#            if (len_cursor < it + 1):
-#                print '** All the processes returned an error **'
-#                conn.close()
-#                sys.exit(0)
-#            exec_wf = cursor[it]
-#            it += 1
             
         # getting information from the main program
         pid = int(exec_wf['pid'])
+        self.__start_time = exec_wf['creation_time']
         
         # if main process has more than one phase, we need to know the 'main'
         # phase
+        reprozip.debug.verbose(self.verbose, 'Getting information of main process...')
+        
         execve_argv = ''
         main_phase_index = None
         for i in range(len(exec_wf['phases'])):
@@ -291,6 +293,8 @@ class Experiment:
         # other phases of main process are included as child nodes of the root
         # node
         # ideally, this is not the perfect solution, but it works
+        reprozip.debug.verbose(self.verbose, 'Getting additional information of main process...')
+        
         phase_added = False
         for i in range(len(exec_wf['phases'])):
             if i != main_phase_index:
@@ -327,7 +331,13 @@ class Experiment:
                 self.__prov_tree.add_node(node)
         
         # finding child processes
-        height = self.__get_child_processes(0, collection)
+        reprozip.debug.verbose(self.verbose, 'Getting information of child processes...')
+        try:
+            height = self.__get_child_processes(0, collection)
+        except:
+            reprozip.debug.error('Error while getting information of child processes: %s' %sys.exc_info()[1])
+            raise Exception
+        
         if (height == 0) and phase_added:
             height = 1
         
@@ -337,6 +347,7 @@ class Experiment:
         conn.close()
         
         # updating root information
+        reprozip.debug.verbose(self.verbose, 'Updating and traversing provenance tree...')
         if self.__prov_tree.height > 0:
             self.__prov_tree.update_root_information()
             
@@ -397,6 +408,7 @@ class Experiment:
         
         # assuring the symbolic links are really symbolic links (sanity check)
         # also getting long chains of symbolic links
+        reprozip.debug.verbose(self.verbose, 'Identifying symbolic links...')
         exclude_symlink = []
         try:
             for symlink in self.__symlink_to_target:
@@ -431,7 +443,7 @@ class Experiment:
                                 chain.append(path)
                                 break
                         if sub_dirs == []:
-                            print "Something is wrong..."
+                            reprozip.debug.error("Something is wrong...")
                             break
                     else:
                         next_target = os.readlink(path)
@@ -442,7 +454,7 @@ class Experiment:
                 if len(chain) < 3:
                     continue
                 if (path != target):
-                    print "Something is wrong..."
+                    reprozip.debug.error("Something is wrong...")
                     
                 self.__symlink_chain[symlink] = chain
                 if dir_chain != []:
@@ -489,21 +501,26 @@ class Experiment:
         ########################################################################
         
         # child programs
+        reprozip.debug.verbose(self.verbose, 'Configuring child programs...')
         for program in self.__child_programs:
             add_rep_file(program, self.__child_programs)
                     
         # main program
+        reprozip.debug.verbose(self.verbose, 'Configuring main program...')
         add_rep_file(self.__main_program.keys()[0], self.__main_program)
         
         # main input files
+        reprozip.debug.verbose(self.verbose, 'Configuring main input files...')
         for input_file in self.__input_files:
             add_rep_file(input_file, self.__input_files)
                         
         # child input files
+        reprozip.debug.verbose(self.verbose, 'Configuring child input files...')
         for input_file in self.__child_input_files:
             add_rep_file(input_file, self.__child_input_files)
             
         # directories
+        reprozip.debug.verbose(self.verbose, 'Configuring directories...')
         for dir in self.__dirs:
             add_rep_file(dir, self.__dirs)
                     
@@ -512,6 +529,8 @@ class Experiment:
         # located together with other input files (considering the working
         # directory of the main program as the common structure) 
         # implicit input files are put together with child input files
+        reprozip.debug.verbose(self.verbose, 'Configuring dependencies...')
+        
         rm_dependencies = []
         for dependency in self.__dependencies:
             l = [dependency, wdir]
@@ -546,6 +565,7 @@ class Experiment:
 #                       'dependencies: %s' %str(self.__dependencies)])
 
         # generate configuration file
+        reprozip.debug.verbose(self.verbose, 'Writing configuration file...')
         self.__gen_config_file()
         
         
@@ -553,6 +573,8 @@ class Experiment:
         """
         Method to read and process the configuration file.
         """
+        
+        reprozip.debug.verbose(self.verbose, 'Reading configuration file...')
         
         if not os.path.exists(reprozip.utils.config_path):
             reprozip.debug.error('Configuration file not found in %s' % os.path.dirname(reprozip.utils.config_path))
@@ -708,6 +730,8 @@ class Experiment:
                         #    file_dict[element[0]] = element[3]
                                 
         ########################################################################
+        
+        reprozip.debug.verbose(self.verbose, 'Processing configuration file...')
         
         # main program
         update_file_info(main_program_index, self.__main_program, config_info,
@@ -893,6 +917,8 @@ class Experiment:
         
         ########################################################################
             
+        reprozip.debug.verbose(self.verbose, 'Including main program in package...')
+            
         # main program
         if len(self.__main_program) == 1:
             main_program = self.__main_program.keys()[0]
@@ -915,9 +941,13 @@ class Experiment:
             argv_dict[0]['value'] = os.path.join(self.__user_exp_dir,
                                                  argv_dict[0]['value'][1:])
                 
+        reprozip.debug.verbose(self.verbose, 'Including child programs in package...')
+                
         # child programs
         for program in self.__child_programs:
             rep_program, in_cp_dir = include_file(program, self.__child_programs[program], True)
+            
+        reprozip.debug.verbose(self.verbose, 'Including main input files in package...')
             
         # input and output files and directories
         for i in range(len(argv_dict)):
@@ -955,13 +985,19 @@ class Experiment:
                 argv_dict[i]['value'] = os.path.join(self.__user_exp_dir,
                                                      argv_dict[i]['value'][1:])
                 
+        reprozip.debug.verbose(self.verbose, 'Including child input files in package...')
+                
         # child input files
         for file_ in self.__child_input_files:
             rep_file, in_cp_dir = include_file(file_, self.__child_input_files[file_])
+            
+        reprozip.debug.verbose(self.verbose, 'Including dependencies in package...')
                 
         # dependencies
         for dependency in self.__dependencies:
             rep_dependency, in_cp_dir = include_file(dependency, self.__dependencies[dependency])
+            
+        reprozip.debug.verbose(self.verbose, 'Making sure the required directories were created in package...')
             
         # directories - making sure they exist
         for dir in self.__dirs:
@@ -1005,6 +1041,8 @@ class Experiment:
             except:
                 reprozip.debug.error('Could not serialize object structures: %s' % sys.exc_info()[1])
                 sys.exit(1)
+        
+        reprozip.debug.verbose(self.verbose, 'Getting environment variables...')
         
         # environment variables
         env_var = {}
@@ -1198,9 +1236,11 @@ class Experiment:
         pwd = os.path.join(self.__user_exp_dir, self.__prov_tree.root.execve_pwd[1:])
             
         # generating executable script
+        reprozip.debug.verbose(self.verbose, 'Writing executable script...')
         self.generate_exec_script(argv_dict, env_var, pwd)
         
         # generating VisTrails workflow
+        reprozip.debug.verbose(self.verbose, 'Writing workflow...')
         self.generate_vt_workflow(main_name, argv_dict, env_var, pwd)
         
     def generate_exec_script(self, argv_dict, env_var, pwd):
@@ -1898,7 +1938,10 @@ class Experiment:
         """
         
         current_ppid = self.__prov_tree.nodes[id].pid    
-        cursor = db_collection.find({'ppid': current_ppid})
+        cursor = db_collection.find({'$and': [
+                                              {'ppid': current_ppid},
+                                              {'creation_time': {'$gte': self.__start_time}}
+                                              ]})
         
         # checking if cursor is empty
         len_cursor = cursor.count()

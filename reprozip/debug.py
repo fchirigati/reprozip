@@ -53,3 +53,10 @@ def success(message):
     
     print '\n*** %s ***\n' %message
     
+def verbose(verbose, message):
+    """
+    Verbose option.
+    """
+    
+    if verbose:
+        print '<v> %s' %message

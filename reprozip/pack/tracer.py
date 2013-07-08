@@ -146,6 +146,17 @@ class Tracer:
         
         # give it some time to begin
         time.sleep(10)
+        
+    def check_tracer(self):
+        """
+        Method that checks if there was any problem with the tracer.
+        """
+        
+        if self.__p_tracer.returncode == None:
+            # tracer has terminated - an error has probably occured
+            stderr = self.__p_tracer.stderr.read()
+            reprozip.debug.error('Error while tracing system calls: \"%s\"' %stderr)
+            raise Exception
                 
     def stop_tracer(self):
         """
