@@ -10,12 +10,20 @@ Limitations:
 * An experiment cannot be reproduced if its executables and scripts use hard-coded absolute paths.
 * Repeatability of non-deterministic processes is not guaranteed.
 
-For more information, to report bugs and to give some feedback, contact Fernando Chirigati at *fchirigati [at] nyu [dot] edu*.
-
 Publications:
 
 * SIGMOD 2013: http://vgc.poly.edu/~fchirigati/papers/SIGMOD-2013.pdf‎
 * TaPP 2013: http://vgc.poly.edu/~fchirigati/papers/TaPP-2013.pdf
+
+Code Repository:
+
+The source code is available on GitHub::
+
+    git clone https://github.com/fchirigati/reprozip.git
+    cd reprozip
+    python setup.py install
+
+For more information, to report bugs and to give some feedback, contact Fernando Chirigati at *fchirigati [at] nyu [dot] edu*.
 
 How To Install ReproZip
 =======================
