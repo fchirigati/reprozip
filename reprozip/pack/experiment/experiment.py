@@ -796,6 +796,10 @@ class Experiment:
         ########################################################################
                 
         def include_file(original_file, rep_file, program=False):
+            # if file does not exist (tmp file), just ignore it
+            if not os.path.exists(original_file):
+                return (None, in_cp_dir)
+            
             in_cp_dir = False
             if reprozip.utils.rep_dir_var not in rep_file:
                 in_cp_dir = True
@@ -842,8 +846,8 @@ class Experiment:
                 
                 if os.path.isdir(original_file):
                     if os.path.exists(rep_file):
-                        shutil.rmtree(rep_file)
-                    shutil.copytree(original_file, rep_file)
+                        return (rep_file, in_cp_dir)
+                    os.makedirs(rep_file)
                 else:
                     if os.path.exists(rep_file):
                         os.remove(rep_file)
@@ -916,6 +920,8 @@ class Experiment:
             return (rep_file, in_cp_dir)
         
         ########################################################################
+        
+        print "\n- Copying files to package... Be patient! This may take a while...\n"
             
         reprozip.debug.verbose(self.verbose, 'Including main program in package...')
             
@@ -1250,13 +1256,13 @@ class Experiment:
         """
         
 #         script = ''
-#         
+#          
 #         script += 'import os\n'
 #         script += 'import subprocess\n\n'
-#         
+#          
 #         script += 'pwd = os.getcwd()\n'
 #         script += 'os.chdir(\'%s\')\n\n' %pwd
-#             
+#              
 #         cmd = ''
 #         for i in range(0, len(argv_dict), 1):
 #             if argv_dict[i]['flag']:
@@ -1264,27 +1270,27 @@ class Experiment:
 #             if argv_dict[i]['prefix']:
 #                 cmd += '%s' %argv_dict[i]['prefix']
 #             cmd += '%s ' %argv_dict[i]['value']
-#             
+#              
 #         script += 'cmd = \"%s\".split()\n' %cmd
 #         script += 'env = %s\n' %str(env_var)
 #         script += 'p = subprocess.Popen(cmd, env=env)\n'
 #         script += 'r = p.wait()\n\n'
-#             
+#              
 #         script += 'os.chdir(pwd)'
         
         script = ''
-        
+         
         script += 'pushd %s\n(' %pwd
         for var in env_var:
             script += 'export %s=%s; ' %(var, env_var[var])
-            
+             
         for i in range(0, len(argv_dict), 1):
             if argv_dict[i]['flag']:
                 script += '%s ' %argv_dict[i]['flag']
             if argv_dict[i]['prefix']:
                 script += '%s' %argv_dict[i]['prefix']
             script += '%s ' %argv_dict[i]['value']
-            
+             
         script += ')\npopd'
             
         script_file = reprozip.utils.exec_path.replace(reprozip.utils.rep_dir_var,

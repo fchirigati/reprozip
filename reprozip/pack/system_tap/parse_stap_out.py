@@ -679,12 +679,18 @@ class Process:
             symlink = os.path.normpath(entry.symlink)
             target = os.path.normpath(entry.target)
             pwd = os.path.normpath(entry.pwd)
+            
             if not os.path.isabs(symlink):
                 if not os.path.isabs(pwd):
                     return False
                 symlink = os.path.join(pwd, symlink)
                 if not os.path.exists(symlink):
                     return False
+            
+            for d in IGNORE_DIRS:
+                if symlink.startswith(d):
+                    return False 
+            
             args = (entry.proc_name, entry.timestamp, symlink)
             # file
             if not os.path.isdir(symlink):
@@ -707,6 +713,11 @@ class Process:
                 symlink = os.path.normpath(os.path.join(d_filename, symlink))
                 if not os.path.exists(symlink):
                     return False
+                
+            for d in IGNORE_DIRS:
+                if symlink.startswith(d):
+                    return False 
+                
             args = (entry.proc_name, entry.timestamp, symlink)
             # file
             if not os.path.isdir(symlink):
@@ -722,6 +733,11 @@ class Process:
         elif entry.syscall_name in ('STAT', 'ACCESS', 'TRUNCATE'):
             filename = os.path.normpath(entry.filename)
             if os.path.isabs(filename) and os.path.exists(filename):
+                
+                for d in IGNORE_DIRS:
+                    if filename.startswith(d):
+                        return False 
+                
                 args = (entry.proc_name, entry.timestamp, filename)
                 # file
                 if not os.path.isdir(filename):
@@ -740,6 +756,11 @@ class Process:
                 if not os.path.isabs(d_filename):
                     return False
                 filename = os.path.normpath(os.path.join(d_filename, filename))
+                
+            for d in IGNORE_DIRS:
+                if filename.startswith(d):
+                    return False 
+                
             args = (entry.proc_name, entry.timestamp, filename)
             # file
             if not os.path.isdir(filename):

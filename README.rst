@@ -10,7 +10,7 @@ Limitations:
 * An experiment cannot be reproduced if its executables and scripts use hard-coded absolute paths.
 * Repeatability of non-deterministic processes is not guaranteed.
 
-For more information and to report bugs, contact Fernando Chirigati at *fchirigati [at] nyu [dot] edu*.
+For more information, to report bugs and to give some feedback, contact Fernando Chirigati at *fchirigati [at] nyu [dot] edu*.
 
 Publications:
 
@@ -144,7 +144,7 @@ The default settings can be found at ReproZip's configuration file (*$HOME/.repr
 ReproZip Team
 =============
 
-* Fernando Chirigati - contact him at *fchirigati [at] nyu [dot] edu* for more information and to report bugs
+* Fernando Chirigati - contact him at *fchirigati [at] nyu [dot] edu* to report bugs, give feedback and make suggestions about ReproZip
 * Dennis Shasha
 * Juliana Freire
 
