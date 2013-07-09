@@ -15,8 +15,6 @@ Publications:
 * SIGMOD 2013: http://vgc.poly.edu/~fchirigati/papers/SIGMOD-2013.pdf‎
 * TaPP 2013: http://vgc.poly.edu/~fchirigati/papers/TaPP-2013.pdf
 
-Code Repository:
-
 The source code is available on GitHub::
 
     git clone https://github.com/fchirigati/reprozip.git
