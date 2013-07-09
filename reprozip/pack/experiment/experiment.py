@@ -796,11 +796,12 @@ class Experiment:
         ########################################################################
                 
         def include_file(original_file, rep_file, program=False):
+            in_cp_dir = False
+            
             # if file does not exist (tmp file), just ignore it
             if not os.path.exists(original_file):
                 return (None, in_cp_dir)
-            
-            in_cp_dir = False
+
             if reprozip.utils.rep_dir_var not in rep_file:
                 in_cp_dir = True
                 basename = reprozip.utils.sep.join(rep_file.split(os.sep))
