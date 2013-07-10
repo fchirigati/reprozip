@@ -48,16 +48,6 @@ def unpack(args):
     wdir = args['wdir']
     verbose = args['verbose']
     
-#    def verbose_(args):
-#        """
-#        Verbose function.
-#        """
-#        if verbose:
-#            for arg in args:
-#                print arg
-#        else:
-#            pass
-    
     if not os.path.exists(package):
         reprozip.debug.error('The package "%s" does not exist.' % package)
         sys.exit(1)
