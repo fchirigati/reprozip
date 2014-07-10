@@ -3,7 +3,7 @@ ReproZip
 ========
 
 Note
-    ReproZip is being completely re-designed, so stay tuned!
+    This is the very first version of ReproZip. The newest one is available at http://vida-nyu.github.io/reprozip/
 
 ReproZip is a general tool for Linux distributions that simplifies the process of creating reproducible experiments from command-line executions, a frequently-used common denominator in computational science. It tracks operating system calls and creates a package that contains all the binaries, files and dependencies required to run a given command on the author's computational environment E. ReproZip also generates a workflow specification for the experiment, which can be used to help reviewers to explore and verify the experiment. A reviewer can extract the files and workflow on another environment E' (e.g., the reviewer's desktop), without interfering with any program or dependency already installed on E'.
 
@@ -15,7 +15,7 @@ Limitations:
 
 Publications:
 
-* SIGMOD 2013: http://vgc.poly.edu/~fchirigati/papers/SIGMOD-2013.pdf‎
+* SIGMOD 2013: http://vgc.poly.edu/~fchirigati/papers/SIGMOD-2013.pdf
 * TaPP 2013: http://vgc.poly.edu/~fchirigati/papers/TaPP-2013.pdf
 
 The source code is available on GitHub::
